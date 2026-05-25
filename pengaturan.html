@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Dompetku - Pengaturan</title>
+  <title>FinancialFreedom</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -20,33 +20,43 @@
       <label>Nama Pengguna</label>
       <input type="text" id="settingsUserName" class="premium-input">
     </div>
-    <button class="btn-primary" onclick="saveUserSettings()">Simpan Nama</button>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+      <button onclick="saveUserSettings()" style="padding:9px 20px;border-radius:10px;border:none;background:#00e87a;color:#070c18;font-weight:700;font-size:13px;font-family:inherit;cursor:pointer;">Simpan</button>
+    </div>
   </div>
 
   <div class="settings-section glass">
     <h3>🚧 Batas Pengeluaran</h3>
-    <p style="font-size:13px;line-height:1.6;opacity:.85;margin:10px 0;">
+    <p style="font-size:13px;line-height:1.6;opacity:.7;margin:8px 0 12px;">
       Atur sendiri batas pengeluaran per kategori. Aplikasi akan memberi peringatan jika pengeluaran mendekati atau melewati batas tersebut.
     </p>
-    <button class="btn-primary" onclick="window.location.href='batas.html'">Atur Batas Pengeluaran</button>
+    <div style="display:flex;justify-content:flex-end;">
+      <button onclick="window.location.href='batas.html'" style="padding:9px 20px;border-radius:10px;border:1px solid rgba(0,232,122,0.4);background:rgba(0,232,122,0.08);color:#00e87a;font-weight:600;font-size:13px;font-family:inherit;cursor:pointer;">Atur Batas →</button>
+    </div>
   </div>
 
   <div class="settings-section glass">
     <h3>📄 Laporan</h3>
-    <button class="btn-primary" onclick="showReportModal()">Preview Laporan</button>
-    <button class="btn-secondary" onclick="window.print()">Export PDF / Print</button>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button onclick="showReportModal()" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(0,232,122,0.4);background:rgba(0,232,122,0.08);color:#00e87a;font-weight:600;font-size:13px;font-family:inherit;cursor:pointer;">Preview</button>
+      <button onclick="window.print()" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(240,244,255,0.7);font-weight:600;font-size:13px;font-family:inherit;cursor:pointer;">Export PDF</button>
+    </div>
   </div>
 
   <div class="settings-section glass">
     <h3>⚠️ Reset Data</h3>
-    <button class="btn-danger" onclick="resetAllData()">Reset Semua Data</button>
+    <p style="font-size:13px;line-height:1.6;opacity:.7;margin:8px 0 12px;">Hapus semua data transaksi, tabungan, dan pengaturan secara permanen.</p>
+    <div style="display:flex;justify-content:flex-end;">
+      <button onclick="resetAllData()" style="padding:9px 20px;border-radius:10px;border:1px solid rgba(255,71,87,0.4);background:rgba(255,71,87,0.08);color:#ff4757;font-weight:600;font-size:13px;font-family:inherit;cursor:pointer;">Reset Data</button>
+    </div>
   </div>
 
   <div class="settings-section glass">
     <h3>ℹ️ Tentang</h3>
-    <p style="font-size:13px;line-height:1.6;opacity:.85;">
-      Dompetku v2.0<br>
-      Aplikasi keuangan pribadi berbasis lokal.
+    <p style="font-size:13px;line-height:1.8;opacity:.7;">
+      FinancialFreedom v2.0<br>
+      Aplikasi keuangan pribadi berbasis lokal.<br>
+      Data tersimpan di perangkatmu sendiri.
     </p>
   </div>
 
