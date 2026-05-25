@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Dompetku - Batas Pengeluaran</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="app-container">
+  <header class="glass-header">
+    <button class="back-btn" onclick="window.location.href='index.html'">←</button>
+    <h2>Batas Pengeluaran</h2>
+    <button class="add-btn" onclick="showLimitModal()">+ Batas</button>
+  </header>
+
+  <div class="settings-section glass">
+    <h3>ℹ️ Penjelasan</h3>
+    <p style="font-size:13px;line-height:1.6;opacity:.85;">
+      Batas pengeluaran ditentukan sendiri oleh pengguna. Aplikasi hanya memberi peringatan jika pengeluaran mendekati atau melewati batas yang sudah kamu tetapkan.
+    </p>
+  </div>
+
+  <div id="limitList"></div>
+
+  <div id="limitModal" class="modal">
+    <div class="modal-content glass">
+      <h3 id="limitModalTitle">Tambah Batas Pengeluaran</h3>
+      <input type="hidden" id="limitId">
+
+      <select id="limitCategory" class="premium-select">
+        <option value="makan">🍔 Makan</option>
+        <option value="transport">🚗 Transport</option>
+        <option value="belanja">🛍️ Belanja</option>
+        <option value="tagihan">📄 Tagihan</option>
+        <option value="kesehatan">🏥 Kesehatan</option>
+        <option value="hiburan">🎬 Hiburan</option>
+        <option value="pendidikan">📚 Pendidikan</option>
+        <option value="lainnya">📌 Lainnya</option>
+      </select>
+
+      <input type="text" id="limitAmount" class="premium-input money-input" placeholder="Contoh: 1.500.000">
+
+      <button class="btn-primary" onclick="saveLimitFromForm()">Simpan</button>
+      <button class="btn-secondary" onclick="closeLimitModal()">Batal</button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">🏠 Beranda</a>
+    <a href="transaksi.html" class="nav-item">📝 Transaksi</a>
+    <a href="analisis.html" class="nav-item">📊 Analisis</a>
+    <a href="batas.html" class="nav-item active">🚧 Batas</a>
+    <a href="tabungan.html" class="nav-item">🎯 Tabungan</a>
+    <a href="pengaturan.html" class="nav-item">⚙️ Setting</a>
+  </nav>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/batas.js"></script>
+</body>
+</html>
