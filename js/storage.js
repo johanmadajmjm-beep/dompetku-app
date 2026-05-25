@@ -172,6 +172,44 @@ function getCategoryIcon(category) {
     };
     return icons[category] || '📌';
 }
+function parseMoney(value) {
+  if (!value) return 0;
+  return Number(String(value).replace(/\./g, '').replace(/[^0-9]/g, '')) || 0;
+}
 
+function formatNumberInput(value) {
+  const number = parseMoney(value);
+  return number.toLocaleString('id-ID');
+}
+
+function initMoneyInputs() {
+  document.querySelectorAll('.money-input').forEach(input => {
+    input.addEventListener('input', () => {
+      input.value = formatNumberInput(input.value);
+    });
+  });
+}
+
+function addBudget(budget) {
+  budget.id = Date.now();
+  appData.budgets.push(budget);
+  saveBudgets();
+  return budget;
+}
+
+function updateBudget(id, updatedBudget) {
+  const index = appData.budgets.findIndex(b => b.id == id);
+  if (index !== -1) {
+    appData.budgets[index] = { ...appData.budgets[index], ...updatedBudget };
+    saveBudgets();
+    return true;
+  }
+  return false;
+}
+
+function deleteBudget(id) {
+  appData.budgets = appData.budgets.filter(b => b.id != id);
+  saveBudgets();
+}
 // Load initial data
 loadData();
