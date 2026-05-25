@@ -1,215 +1,269 @@
-// Storage Keys
 const STORAGE_KEYS = {
-    TRANSACTIONS: 'dompetku_transactions',
-    SAVINGS_GOALS: 'dompetku_savings_goals',
-    LOANS: 'dompetku_loans',
-    BUDGETS: 'dompetku_budgets',
-    SETTINGS: 'dompetku_settings'
+  TRANSACTIONS: 'dompetku_transactions',
+  SAVINGS_GOALS: 'dompetku_savings_goals',
+  LOANS: 'dompetku_loans',
+  SPENDING_LIMITS: 'dompetku_spending_limits',
+  SETTINGS: 'dompetku_settings'
 };
 
-// Data Structure
 let appData = {
-    transactions: [],
-    savingsGoals: [],
-    loans: [],
-    budgets: [],
-    settings: {
-        userName: 'Pengguna',
-        theme: 'dark'
-    }
+  transactions: [],
+  savingsGoals: [],
+  loans: [],
+  spendingLimits: [],
+  settings: {
+    userName: 'Pengguna',
+    theme: 'dark'
+  }
 };
 
-// Load Data
 function loadData() {
-    for (const [key, storageKey] of Object.entries(STORAGE_KEYS)) {
-        const data = localStorage.getItem(storageKey);
-        if (data) {
-            try {
-                const parsed = JSON.parse(data);
-                if (key === 'TRANSACTIONS') appData.transactions = Array.isArray(parsed) ? parsed : [];
-                else if (key === 'SAVINGS_GOALS') appData.savingsGoals = Array.isArray(parsed) ? parsed : [];
-                else if (key === 'LOANS') appData.loans = Array.isArray(parsed) ? parsed : [];
-                else if (key === 'BUDGETS') appData.budgets = Array.isArray(parsed) ? parsed : [];
-                else if (key === 'SETTINGS') appData.settings = { ...appData.settings, ...parsed };
-            } catch (error) {
-                console.warn('Data localStorage rusak:', storageKey, error);
-            }
-        }
-    }
-    
-    // Initialize default budgets
-    if (appData.budgets.length === 0) {
-        const categories = ['makan', 'transport', 'belanja', 'tagihan', 'kesehatan', 'hiburan', 'pendidikan', 'lainnya'];
-        categories.forEach(cat => {
-            appData.budgets.push({
-                id: Date.now() + Math.random() + cat,
-                category: cat,
-                limit: 1000000,
-                month: new Date().getMonth(),
-                year: new Date().getFullYear()
-            });
-        });
-        saveBudgets();
-    }
+  try {
+    appData.transactions = JSON.parse(localStorage.getItem(STORAGE_KEYS.TRANSACTIONS)) || [];
+    appData.savingsGoals = JSON.parse(localStorage.getItem(STORAGE_KEYS.SAVINGS_GOALS)) || [];
+    appData.loans = JSON.parse(localStorage.getItem(STORAGE_KEYS.LOANS)) || [];
+    appData.spendingLimits = JSON.parse(localStorage.getItem(STORAGE_KEYS.SPENDING_LIMITS)) || [];
+    appData.settings = {
+      ...appData.settings,
+      ...(JSON.parse(localStorage.getItem(STORAGE_KEYS.SETTINGS)) || {})
+    };
+  } catch (error) {
+    console.error('Gagal load data:', error);
+  }
 }
 
-// Save Data
 function saveTransactions() {
-    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(appData.transactions));
+  localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(appData.transactions));
 }
 
 function saveSavings() {
-    localStorage.setItem(STORAGE_KEYS.SAVINGS_GOALS, JSON.stringify(appData.savingsGoals));
+  localStorage.setItem(STORAGE_KEYS.SAVINGS_GOALS, JSON.stringify(appData.savingsGoals));
 }
 
 function saveLoans() {
-    localStorage.setItem(STORAGE_KEYS.LOANS, JSON.stringify(appData.loans));
+  localStorage.setItem(STORAGE_KEYS.LOANS, JSON.stringify(appData.loans));
 }
 
-function saveBudgets() {
-    localStorage.setItem(STORAGE_KEYS.BUDGETS, JSON.stringify(appData.budgets));
+function saveSpendingLimits() {
+  localStorage.setItem(STORAGE_KEYS.SPENDING_LIMITS, JSON.stringify(appData.spendingLimits));
 }
 
 function saveSettings() {
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(appData.settings));
+  localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(appData.settings));
 }
 
-// Transaction Functions
 function addTransaction(transaction) {
-    transaction.id = Date.now() + Math.floor(Math.random() * 1000);
-    transaction.createdAt = new Date().toISOString();
-    appData.transactions.unshift(transaction);
-    saveTransactions();
-    return transaction;
+  transaction.id = Date.now();
+  transaction.amount = Number(transaction.amount) || 0;
+  transaction.createdAt = new Date().toISOString();
+  appData.transactions.unshift(transaction);
+  saveTransactions();
+  return transaction;
 }
 
 function updateTransaction(id, updatedTransaction) {
-    const index = appData.transactions.findIndex(t => t.id == id);
-    if (index !== -1) {
-        appData.transactions[index] = { ...appData.transactions[index], ...updatedTransaction };
-        saveTransactions();
-        return true;
-    }
-    return false;
+  const index = appData.transactions.findIndex(t => String(t.id) === String(id));
+  if (index === -1) return false;
+
+  appData.transactions[index] = {
+    ...appData.transactions[index],
+    ...updatedTransaction,
+    amount: Number(updatedTransaction.amount) || 0
+  };
+
+  saveTransactions();
+  return true;
 }
 
 function deleteTransaction(id) {
-    appData.transactions = appData.transactions.filter(t => t.id != id);
-    saveTransactions();
+  appData.transactions = appData.transactions.filter(t => String(t.id) !== String(id));
+  saveTransactions();
 }
 
-function getTransactions() {
-    return appData.transactions;
-}
-
-// Savings Functions
 function addSavingsGoal(goal) {
-    goal.id = Date.now() + Math.floor(Math.random() * 1000);
-    goal.createdAt = new Date().toISOString();
-    appData.savingsGoals.push(goal);
-    saveSavings();
-    return goal;
+  goal.id = Date.now();
+  goal.amount = Number(goal.amount) || 0;
+  goal.savedAmount = Number(goal.savedAmount) || 0;
+  goal.createdAt = new Date().toISOString();
+  appData.savingsGoals.push(goal);
+  saveSavings();
+  return goal;
 }
 
 function updateSavingsGoal(id, updatedGoal) {
-    const index = appData.savingsGoals.findIndex(g => g.id == id);
-    if (index !== -1) {
-        appData.savingsGoals[index] = { ...appData.savingsGoals[index], ...updatedGoal };
-        saveSavings();
-        return true;
-    }
-    return false;
+  const index = appData.savingsGoals.findIndex(g => String(g.id) === String(id));
+  if (index === -1) return false;
+
+  appData.savingsGoals[index] = {
+    ...appData.savingsGoals[index],
+    ...updatedGoal
+  };
+
+  saveSavings();
+  return true;
 }
 
 function deleteSavingsGoal(id) {
-    appData.savingsGoals = appData.savingsGoals.filter(g => g.id != id);
-    saveSavings();
+  appData.savingsGoals = appData.savingsGoals.filter(g => String(g.id) !== String(id));
+  saveSavings();
 }
 
-// Loan Functions
 function addLoan(loan) {
-    loan.id = Date.now() + Math.floor(Math.random() * 1000);
-    loan.createdAt = new Date().toISOString();
-    appData.loans.push(loan);
-    saveLoans();
-    return loan;
+  loan.id = Date.now();
+  loan.amount = Number(loan.amount) || 0;
+  loan.installment = Number(loan.installment) || 0;
+  loan.createdAt = new Date().toISOString();
+  appData.loans.push(loan);
+  saveLoans();
+  return loan;
 }
 
 function updateLoan(id, updatedLoan) {
-    const index = appData.loans.findIndex(l => l.id == id);
-    if (index !== -1) {
-        appData.loans[index] = { ...appData.loans[index], ...updatedLoan };
-        saveLoans();
-        return true;
-    }
-    return false;
+  const index = appData.loans.findIndex(l => String(l.id) === String(id));
+  if (index === -1) return false;
+
+  appData.loans[index] = {
+    ...appData.loans[index],
+    ...updatedLoan
+  };
+
+  saveLoans();
+  return true;
 }
 
 function deleteLoan(id) {
-    appData.loans = appData.loans.filter(l => l.id != id);
-    saveLoans();
+  appData.loans = appData.loans.filter(l => String(l.id) !== String(id));
+  saveLoans();
 }
 
-// Helper Functions
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+function addSpendingLimit(limit) {
+  limit.id = Date.now();
+  limit.amount = Number(limit.amount) || 0;
+  limit.month = Number(limit.month);
+  limit.year = Number(limit.year);
+  appData.spendingLimits.push(limit);
+  saveSpendingLimits();
+  return limit;
 }
 
-function getCurrentMonthYear() {
-    const now = new Date();
-    return {
-        month: now.getMonth(),
-        year: now.getFullYear(),
-        monthStr: now.toLocaleString('id-ID', { month: 'long' })
-    };
+function updateSpendingLimit(id, updatedLimit) {
+  const index = appData.spendingLimits.findIndex(l => String(l.id) === String(id));
+  if (index === -1) return false;
+
+  appData.spendingLimits[index] = {
+    ...appData.spendingLimits[index],
+    ...updatedLimit,
+    amount: Number(updatedLimit.amount) || 0
+  };
+
+  saveSpendingLimits();
+  return true;
 }
 
-function getCategoryIcon(category) {
-    const icons = {
-        makan: '🍔', transport: '🚗', belanja: '🛍️', gaji: '💼',
-        usaha: '📈', tagihan: '📄', kesehatan: '🏥', hiburan: '🎬',
-        pendidikan: '📚', tabungan: '🎯', pinjaman: '💳', lainnya: '📌'
-    };
-    return icons[category] || '📌';
+function deleteSpendingLimit(id) {
+  appData.spendingLimits = appData.spendingLimits.filter(l => String(l.id) !== String(id));
+  saveSpendingLimits();
 }
+
 function parseMoney(value) {
   if (!value) return 0;
   return Number(String(value).replace(/\./g, '').replace(/[^0-9]/g, '')) || 0;
 }
 
-function formatNumberInput(value) {
+function formatMoneyInput(value) {
   const number = parseMoney(value);
+  if (!number) return '';
   return number.toLocaleString('id-ID');
 }
 
 function initMoneyInputs() {
   document.querySelectorAll('.money-input').forEach(input => {
     input.addEventListener('input', () => {
-      input.value = formatNumberInput(input.value);
+      input.value = formatMoneyInput(input.value);
     });
   });
 }
 
-function addBudget(budget) {
-  budget.id = Date.now();
-  appData.budgets.push(budget);
-  saveBudgets();
-  return budget;
+function formatCurrency(amount) {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(Number(amount) || 0);
 }
 
-function updateBudget(id, updatedBudget) {
-  const index = appData.budgets.findIndex(b => b.id == id);
-  if (index !== -1) {
-    appData.budgets[index] = { ...appData.budgets[index], ...updatedBudget };
-    saveBudgets();
-    return true;
-  }
-  return false;
+function getCategoryIcon(category) {
+  const icons = {
+    makan: '🍔',
+    transport: '🚗',
+    belanja: '🛍️',
+    gaji: '💼',
+    usaha: '📈',
+    tagihan: '📄',
+    kesehatan: '🏥',
+    hiburan: '🎬',
+    pendidikan: '📚',
+    tabungan: '🎯',
+    lainnya: '📌'
+  };
+
+  return icons[category] || '📌';
 }
 
-function deleteBudget(id) {
-  appData.budgets = appData.budgets.filter(b => b.id != id);
-  saveBudgets();
+function getCurrentMonthYear() {
+  const now = new Date();
+  return {
+    month: now.getMonth(),
+    year: now.getFullYear(),
+    monthName: now.toLocaleString('id-ID', { month: 'long' })
+  };
 }
-// Load initial data
+
+function getMonthlyTotal(type, month = new Date().getMonth(), year = new Date().getFullYear()) {
+  return appData.transactions
+    .filter(t => {
+      const d = new Date(t.date);
+      return t.type === type && d.getMonth() === month && d.getFullYear() === year;
+    })
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+}
+
+function getTotalBalance() {
+  return appData.transactions.reduce((sum, t) => {
+    return t.type === 'income'
+      ? sum + Number(t.amount)
+      : sum - Number(t.amount);
+  }, 0);
+}
+
+function getCategoryExpense(category, month = new Date().getMonth(), year = new Date().getFullYear()) {
+  return appData.transactions
+    .filter(t => {
+      const d = new Date(t.date);
+      return t.type === 'expense' &&
+        t.category === category &&
+        d.getMonth() === month &&
+        d.getFullYear() === year;
+    })
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+}
+
+function resetAllData() {
+  if (!confirm('Yakin ingin menghapus semua data?')) return;
+
+  Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
+
+  appData.transactions = [];
+  appData.savingsGoals = [];
+  appData.loans = [];
+  appData.spendingLimits = [];
+  appData.settings = {
+    userName: 'Pengguna',
+    theme: 'dark'
+  };
+
+  alert('Semua data berhasil dihapus.');
+  location.reload();
+}
+
 loadData();
