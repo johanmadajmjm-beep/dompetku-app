@@ -3,44 +3,64 @@ let trendChart = null;
 let pieChart = null;
 
 /* ── Helper: get data based on filter mode ── */
-function getFilteredTrendData(mode, year, month) {
+function getFilteredTrendData(mode) {
   const labels = [];
   const incomeData = [];
   const expenseData = [];
+  const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const now = new Date();
 
   if (mode === 'year') {
-    const now = new Date();
-    const y = now.getFullYear();
-    const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-    for (let m = 0; m < 12; m++) {
-      labels.push(monthNames[m]);
-      incomeData.push(getMonthlyTotal('income', m, y));
-      expenseData.push(getMonthlyTotal('expense', m, y));
+    // 4 tahun terakhir
+    const currentYear = now.getFullYear();
+    for (let y = currentYear - 3; y <= currentYear; y++) {
+      labels.push(String(y));
+      let inc = 0, exp = 0;
+      for (let m = 0; m < 12; m++) {
+        inc += getMonthlyTotal('income', m, y);
+        exp += getMonthlyTotal('expense', m, y);
+      }
+      incomeData.push(inc);
+      expenseData.push(exp);
     }
-  } else if (mode === 'month') {
-    // 6 bulan terakhir (default)
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      labels.push(date.toLocaleString('id-ID', { month: 'short' }));
-      incomeData.push(getMonthlyTotal('income', date.getMonth(), date.getFullYear()));
-      expenseData.push(getMonthlyTotal('expense', date.getMonth(), date.getFullYear()));
-    }
-  } else if (mode === 'week') {
-    // 4 minggu terakhir
-    const now = new Date();
-    for (let w = 3; w >= 0; w--) {
-      const weekStart = new Date(now);
-      weekStart.setDate(now.getDate() - (w * 7) - now.getDay());
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
 
-      labels.push(`${weekStart.getDate()}/${weekStart.getMonth()+1}`);
+  } else if (mode === 'month') {
+    // 12 bulan terakhir, label: "Jan-25", "Feb-26", dst
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mn = d.getMonth();
+      const yr = String(d.getFullYear()).slice(2);
+      labels.push(monthNames[mn] + '-' + yr);
+      incomeData.push(getMonthlyTotal('income', mn, d.getFullYear()));
+      expenseData.push(getMonthlyTotal('expense', mn, d.getFullYear()));
+    }
+
+  } else if (mode === 'week') {
+    // 8 minggu terakhir, label: "W17/Mei"
+    function getWeekNumber(date) {
+      const start = new Date(date.getFullYear(), 0, 1);
+      const diff = date - start;
+      const oneWeek = 7 * 24 * 60 * 60 * 1000;
+      return Math.ceil((diff / oneWeek) + 1);
+    }
+
+    for (let w = 7; w >= 0; w--) {
+      const monday = new Date(now);
+      const day = now.getDay() === 0 ? 6 : now.getDay() - 1;
+      monday.setDate(now.getDate() - day - (w * 7));
+      monday.setHours(0, 0, 0, 0);
+
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      sunday.setHours(23, 59, 59, 999);
+
+      const weekNum = getWeekNumber(monday);
+      labels.push('W' + weekNum + '/' + monthNames[monday.getMonth()]);
 
       let inc = 0, exp = 0;
       appData.transactions.forEach(t => {
         const d = new Date(t.date);
-        if (d >= weekStart && d <= weekEnd) {
+        if (d >= monday && d <= sunday) {
           if (t.type === 'income') inc += Number(t.amount);
           else exp += Number(t.amount);
         }
@@ -95,7 +115,7 @@ function buildTrendChartConfig(data) {
         legend: { labels: { color: 'rgba(240,244,255,0.8)', font: { size: 12 } } },
         tooltip: {
           callbacks: {
-            label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
+            label: ctx => ctx.dataset.label + ': ' + formatCurrency(ctx.raw)
           }
         }
       },
@@ -105,7 +125,7 @@ function buildTrendChartConfig(data) {
           grid: { color: 'rgba(255,255,255,0.05)' }
         },
         x: {
-          ticks: { color: 'rgba(240,244,255,0.6)', font: { size: 11 } },
+          ticks: { color: 'rgba(240,244,255,0.6)', font: { size: 10 }, maxRotation: 45 },
           grid: { display: false }
         }
       }
@@ -128,44 +148,22 @@ function renderIncomeExpenseTrendChart() {
   const canvas = document.getElementById('incomeExpenseTrendChart');
   if (!canvas) return;
 
-  // Inject slicer UI above canvas
-  const container = canvas.parentElement;
   if (!document.getElementById('trendSlicer')) {
-    const slicerHTML = `
-      <div id="trendSlicer" style="
-        display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;
-      ">
-        <button class="slicer-btn active" data-mode="month" onclick="switchTrendMode('month')">6 Bulan</button>
-        <button class="slicer-btn" data-mode="year" onclick="switchTrendMode('year')">Tahun Ini</button>
-        <button class="slicer-btn" data-mode="week" onclick="switchTrendMode('week')">4 Minggu</button>
-      </div>
-    `;
+    const slicerHTML =
+      '<div id="trendSlicer" style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">' +
+        '<button class="slicer-btn active" data-mode="month" onclick="switchTrendMode(\'month\')">Bulan</button>' +
+        '<button class="slicer-btn" data-mode="year" onclick="switchTrendMode(\'year\')">Tahun</button>' +
+        '<button class="slicer-btn" data-mode="week" onclick="switchTrendMode(\'week\')">Minggu</button>' +
+      '</div>';
     canvas.insertAdjacentHTML('beforebegin', slicerHTML);
 
-    // Inject slicer styles once
     if (!document.getElementById('slicerStyles')) {
       const style = document.createElement('style');
       style.id = 'slicerStyles';
-      style.textContent = `
-        .slicer-btn {
-          padding: 6px 14px;
-          border-radius: 20px;
-          border: 1px solid rgba(255,255,255,0.12);
-          background: rgba(255,255,255,0.04);
-          color: rgba(240,244,255,0.6);
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          font-family: inherit;
-          transition: all 0.2s ease;
-        }
-        .slicer-btn.active {
-          background: rgba(0,232,122,0.15);
-          border-color: rgba(0,232,122,0.45);
-          color: #00e87a;
-        }
-        .slicer-btn:active { transform: scale(0.95); }
-      `;
+      style.textContent =
+        '.slicer-btn{padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(240,244,255,0.6);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s ease;}' +
+        '.slicer-btn.active{background:rgba(0,232,122,0.15);border-color:rgba(0,232,122,0.45);color:#00e87a;}' +
+        '.slicer-btn:active{transform:scale(0.95);}';
       document.head.appendChild(style);
     }
   }
@@ -183,14 +181,13 @@ function drawTrendChart(mode) {
 }
 
 function switchTrendMode(mode) {
-  // Update active button
   document.querySelectorAll('.slicer-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
   drawTrendChart(mode);
 }
 
-/* ── Pie chart (unchanged) ── */
+/* ── Pie chart ── */
 function renderExpensePieChart() {
   const canvas = document.getElementById('pieChart');
   if (!canvas) return;
@@ -212,7 +209,7 @@ function renderExpensePieChart() {
   pieChart = new Chart(ctx, {
     type: 'pie',
     data: {
-      labels: labels.map(c => `${getCategoryIcon(c)} ${c}`),
+      labels: labels.map(c => getCategoryIcon(c) + ' ' + c),
       datasets: [{
         data: values,
         backgroundColor: [
@@ -235,7 +232,7 @@ function renderExpensePieChart() {
             label: ctx => {
               const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
               const pct = total ? ((ctx.raw / total) * 100).toFixed(1) : 0;
-              return `${ctx.label}: ${formatCurrency(ctx.raw)} (${pct}%)`;
+              return ctx.label + ': ' + formatCurrency(ctx.raw) + ' (' + pct + '%)';
             }
           }
         }
