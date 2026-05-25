@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Dompetku - Dashboard</title>
   <link rel="stylesheet" href="css/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="app-container">
@@ -20,7 +19,6 @@
   <div class="balance-card glass">
     <div class="balance-label">Total Saldo</div>
     <div class="balance-amount" id="totalBalance">Rp 0</div>
-
     <div class="balance-stats">
       <div class="stat-item">
         <span class="stat-label">Pemasukan Bulan Ini</span>
@@ -41,21 +39,13 @@
         <div class="stat-number" id="totalSavings">Rp 0</div>
       </div>
     </div>
-
     <div class="stat-card glass">
       <div class="stat-icon">💳</div>
       <div class="stat-info">
-        <div class="stat-label">Total Pinjaman</div>
+        <div class="stat-label">Total Utang</div>
         <div class="stat-number negative" id="totalLoan">Rp 0</div>
       </div>
     </div>
-  </div>
-
-  <div class="chart-container glass">
-    <div class="section-title">
-      <h3>📈 Trend Pemasukan & Pengeluaran</h3>
-    </div>
-    <canvas id="cashflowChart" height="200"></canvas>
   </div>
 
   <div class="quick-actions">
@@ -86,17 +76,34 @@
   </div>
 
   <nav class="bottom-nav">
-    <a href="index.html" class="nav-item active">🏠 Beranda</a>
-    <a href="transaksi.html" class="nav-item">📝 Transaksi</a>
-    <a href="analisis.html" class="nav-item">📊 Analisis</a>
-    <a href="batas.html" class="nav-item">🚧 Batas</a>
-    <a href="tabungan.html" class="nav-item">🎯 Tabungan</a>
-    <a href="pengaturan.html" class="nav-item">⚙️ Setting</a>
+    <a href="index.html" class="nav-item active">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Beranda</span>
+    </a>
+    <a href="transaksi.html" class="nav-item">
+      <span class="nav-icon">📝</span>
+      <span class="nav-label">Transaksi</span>
+    </a>
+    <a href="analisis.html" class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Analisis</span>
+    </a>
+    <a href="utang.html" class="nav-item">
+      <span class="nav-icon">💸</span>
+      <span class="nav-label">Utang</span>
+    </a>
+    <a href="tabungan.html" class="nav-item">
+      <span class="nav-icon">🎯</span>
+      <span class="nav-label">Tabungan</span>
+    </a>
+    <a href="pengaturan.html" class="nav-item">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Setting</span>
+    </a>
   </nav>
 </div>
 
 <script src="js/storage.js"></script>
-<script src="js/charts.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
