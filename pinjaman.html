@@ -1,74 +1,64 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Dompetku - Pinjaman</title>
-    <link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Dompetku - Pinjaman</title>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div class="app-container">
-        <header class="glass-header">
-            <button class="back-btn" onclick="window.location.href='index.html'">←</button>
-            <h2>Pinjaman</h2>
-            <button class="add-btn" onclick="showLoanModal()">+ Pinjaman</button>
-        </header>
+<div class="app-container">
+  <header class="glass-header">
+    <button class="back-btn" onclick="window.location.href='index.html'">←</button>
+    <h2>Pinjaman</h2>
+    <button class="add-btn" onclick="showLoanModal()">+ Pinjaman</button>
+  </header>
 
-        <div class="loan-tabs">
-            <button class="loan-tab active" onclick="switchLoanTab('borrow')">💸 Saya Berutang</button>
-            <button class="loan-tab" onclick="switchLoanTab('lend')">💰 Orang Berutang ke Saya</button>
-        </div>
+  <div class="loan-tabs">
+    <button class="loan-tab active" onclick="switchLoanTab('borrow')">💸 Saya Berutang</button>
+    <button class="loan-tab" onclick="switchLoanTab('lend')">💰 Orang Berutang ke Saya</button>
+  </div>
 
-        <div id="borrowList" class="loan-list"></div>
-        <div id="lendList" class="loan-list" style="display: none;"></div>
+  <div id="borrowList" class="loan-list"></div>
+  <div id="lendList" class="loan-list" style="display:none;"></div>
 
-        <!-- Modal Pinjaman -->
-        <div id="loanModal" class="modal">
-            <div class="modal-content glass">
-                <h3 id="loanModalTitle">Tambah Pinjaman</h3>
-                <input type="hidden" id="loanId">
-                <input type="hidden" id="loanType" value="borrow">
-                <select id="loanTypeSelect" class="premium-select">
-                    <option value="borrow">Saya Berutang</option>
-                    <option value="lend">Orang Berutang ke Saya</option>
-                </select>
-                <input type="text" id="loanName" placeholder="Nama Pihak" class="premium-input">
-                <input type="number" id="loanAmount" placeholder="Nominal" class="premium-input">
-                <input type="number" id="installmentAmount" placeholder="Cicilan per Bulan (Opsional)" class="premium-input">
-                <input type="date" id="loanDueDate" class="premium-input">
-                <select id="loanStatus" class="premium-select">
-                    <option value="active">Aktif</option>
-                    <option value="paid">Lunas</option>
-                    <option value="overdue">Terlambat</option>
-                </select>
-                <button class="btn-primary" onclick="saveLoan()">Simpan</button>
-                <button class="btn-secondary" onclick="closeLoanModal()">Batal</button>
-            </div>
-        </div>
+  <div id="loanModal" class="modal">
+    <div class="modal-content glass">
+      <h3>Tambah/Edit Pinjaman</h3>
+      <input type="hidden" id="loanId">
 
-        <nav class="bottom-nav">
-            <a href="index.html" class="nav-item">
-                <span class="nav-icon">🏠</span><span>Beranda</span>
-            </a>
-            <a href="transaksi.html" class="nav-item">
-                <span class="nav-icon">📝</span><span>Transaksi</span>
-            </a>
-            <a href="analisis.html" class="nav-item">
-                <span class="nav-icon">📊</span><span>Analisis</span>
-            </a>
-            <a href="tabungan.html" class="nav-item">
-                <span class="nav-icon">🎯</span><span>Tabungan</span>
-            </a>
-            <a href="pinjaman.html" class="nav-item active">
-                <span class="nav-icon">💳</span><span>Pinjaman</span>
-            </a>
-            <a href="pengaturan.html" class="nav-item">
-                <span class="nav-icon">⚙️</span><span>Pengaturan</span>
-            </a>
-        </nav>
+      <select id="loanTypeSelect" class="premium-select">
+        <option value="borrow">Saya Berutang</option>
+        <option value="lend">Orang Berutang ke Saya</option>
+      </select>
+
+      <input type="text" id="loanName" placeholder="Nama Pihak" class="premium-input">
+      <input type="text" id="loanAmount" placeholder="Nominal" class="premium-input money-input">
+      <input type="text" id="installmentAmount" placeholder="Cicilan per Bulan Opsional" class="premium-input money-input">
+      <input type="date" id="loanDueDate" class="premium-input">
+
+      <select id="loanStatus" class="premium-select">
+        <option value="active">Aktif</option>
+        <option value="paid">Lunas</option>
+        <option value="overdue">Terlambat</option>
+      </select>
+
+      <button class="btn-primary" onclick="saveLoan()">Simpan</button>
+      <button class="btn-secondary" onclick="closeLoanModal()">Batal</button>
     </div>
+  </div>
 
-    <script src="js/storage.js"></script>
-    <script src="js/app.js"></script>
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">🏠 Beranda</a>
+    <a href="transaksi.html" class="nav-item">📝 Transaksi</a>
+    <a href="analisis.html" class="nav-item">📊 Analisis</a>
+    <a href="batas.html" class="nav-item">🚧 Batas</a>
+    <a href="tabungan.html" class="nav-item">🎯 Tabungan</a>
+    <a href="pengaturan.html" class="nav-item">⚙️ Setting</a>
+  </nav>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
