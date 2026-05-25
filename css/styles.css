@@ -612,3 +612,23 @@ body {
     .nav-icon { font-size: 18px; }
     .bottom-nav { padding-left: 6px; padding-right: 6px; }
 }
+/* FIX DROPDOWN DARK MODE */
+select,
+select option,
+.premium-select,
+.filter-select {
+    background-color: #202638;
+    color: #ffffff;
+}
+
+select option {
+    padding: 12px;
+    background-color: #202638;
+    color: #ffffff;
+}
+
+select option:checked,
+select option:hover {
+    background-color: #00cc66;
+    color: #ffffff;
+}
