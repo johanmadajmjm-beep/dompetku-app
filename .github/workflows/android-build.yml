@@ -16,6 +16,17 @@ jobs:
         with:
           node-version: 20
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Prepare web folder
+        run: |
+          mkdir -p www
+          cp -r *.html css js README.md www/
+
       - name: Install dependencies
         run: |
           npm init -y
@@ -23,24 +34,19 @@ jobs:
 
       - name: Create Capacitor config
         run: |
-          echo '{
+          cat > capacitor.config.json << 'EOF'
+          {
             "appId": "com.dompetku.app",
             "appName": "DompetKu",
-            "webDir": ".",
-            "bundledWebRuntime": false
-          }' > capacitor.config.json
+            "webDir": "www"
+          }
+          EOF
 
       - name: Add Android platform
         run: npx cap add android
 
       - name: Copy web assets
-        run: npx cap copy
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
+        run: npx cap copy android
 
       - name: Build APK
         run: |
