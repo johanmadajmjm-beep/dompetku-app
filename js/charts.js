@@ -77,6 +77,14 @@ function getSixMonthFinanceData() {
   return getFilteredTrendData('month');
 }
 
+/* ── Format short: 1.5jt, 500rb, dst ── */
+function formatShort(value) {
+  if (value >= 1000000000) return (value / 1000000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (value >= 1000000)    return (value / 1000000).toFixed(1).replace(/\.0$/, '') + 'jt';
+  if (value >= 1000)       return (value / 1000).toFixed(0) + 'rb';
+  return value.toString();
+}
+
 /* ── Build chart config ── */
 function buildTrendChartConfig(data) {
   return {
@@ -112,7 +120,16 @@ function buildTrendChartConfig(data) {
       responsive: true,
       animation: { duration: 500, easing: 'easeInOutQuart' },
       plugins: {
-        legend: { labels: { color: 'rgba(240,244,255,0.8)', font: { size: 12 } } },
+        legend: {
+          labels: {
+            color: 'rgba(240,244,255,0.8)',
+            font: { size: 12 },
+            usePointStyle: true,
+            pointStyle: 'rect',
+            boxWidth: 12,
+            boxHeight: 12
+          }
+        },
         tooltip: {
           callbacks: {
             label: ctx => ctx.dataset.label + ': ' + formatCurrency(ctx.raw)
@@ -121,7 +138,11 @@ function buildTrendChartConfig(data) {
       },
       scales: {
         y: {
-          ticks: { color: 'rgba(240,244,255,0.6)', callback: v => formatCurrency(v), font: { size: 11 } },
+          ticks: {
+            color: 'rgba(240,244,255,0.6)',
+            font: { size: 11 },
+            callback: v => formatShort(v)
+          },
           grid: { color: 'rgba(255,255,255,0.05)' }
         },
         x: {
