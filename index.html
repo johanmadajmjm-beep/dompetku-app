@@ -10,37 +10,37 @@
 <div class="app-container">
   <header class="glass-header">
     <div>
-      <div class="greeting">Halo, <span id="userName">Pengguna</span></div>
+      <div class="greeting">Halo, <span id="userName">Pengguna</span> 👋</div>
       <div class="date" id="currentDate"></div>
     </div>
     <div class="avatar">👤</div>
   </header>
 
   <div class="balance-card glass">
-    <div class="balance-label">Total Saldo</div>
+    <div class="balance-label">💰 Total Saldo</div>
     <div class="balance-amount" id="totalBalance">Rp 0</div>
     <div class="balance-stats">
       <div class="stat-item">
-        <span class="stat-label">Pemasukan Bulan Ini</span>
+        <span class="stat-label">📈 Pemasukan Bulan Ini</span>
         <span class="stat-value positive" id="monthIncome">Rp 0</span>
       </div>
       <div class="stat-item">
-        <span class="stat-label">Pengeluaran Bulan Ini</span>
+        <span class="stat-label">📉 Pengeluaran Bulan Ini</span>
         <span class="stat-value negative" id="monthExpense">Rp 0</span>
       </div>
     </div>
   </div>
 
   <div class="stats-row">
-    <div class="stat-card glass">
+    <div class="stat-card glass" onclick="window.location.href='tabungan.html'">
       <div class="stat-icon">🎯</div>
       <div class="stat-info">
         <div class="stat-label">Total Tabungan</div>
-        <div class="stat-number" id="totalSavings">Rp 0</div>
+        <div class="stat-number positive" id="totalSavings">Rp 0</div>
       </div>
     </div>
-    <div class="stat-card glass">
-      <div class="stat-icon">💳</div>
+    <div class="stat-card glass" onclick="window.location.href='utang.html'">
+      <div class="stat-icon">💸</div>
       <div class="stat-info">
         <div class="stat-label">Total Utang</div>
         <div class="stat-number negative" id="totalLoan">Rp 0</div>
@@ -60,18 +60,14 @@
   </div>
 
   <div class="insight-section">
-    <div class="section-title">
-      <h3>💡 Insight & Peringatan</h3>
-    </div>
+    <div class="section-title"><h3>💡 Insight & Peringatan</h3></div>
     <div class="insight-card glass" id="insightContainer">
       <div class="insight-text">Belum ada insight.</div>
     </div>
   </div>
 
   <div class="insight-section">
-    <div class="section-title">
-      <h3>🚧 Batas Pengeluaran</h3>
-    </div>
+    <div class="section-title"><h3>🚧 Batas Pengeluaran</h3></div>
     <div id="limitWarningContainer"></div>
   </div>
 
