@@ -1,134 +1,192 @@
-// Charts Module
 let cashflowChart = null;
+let trendChart = null;
+let pieChart = null;
+
+function getSixMonthFinanceData() {
+  const labels = [];
+  const incomeData = [];
+  const expenseData = [];
+  const now = new Date();
+
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    labels.push(date.toLocaleString('id-ID', { month: 'short' }));
+
+    incomeData.push(getMonthlyTotal('income', date.getMonth(), date.getFullYear()));
+    expenseData.push(getMonthlyTotal('expense', date.getMonth(), date.getFullYear()));
+  }
+
+  return { labels, incomeData, expenseData };
+}
 
 function renderCashflowChart() {
-    const canvas = document.getElementById('cashflowChart');
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    
-    // Get last 30 days data
-    const dailyData = {};
-    const today = new Date();
-    
-    for (let i = 29; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        dailyData[dateStr] = { income: 0, expense: 0, balance: 0 };
-    }
-    
-    appData.transactions.forEach(t => {
-        if (dailyData[t.date]) {
-            if (t.type === 'income') {
-                dailyData[t.date].income += t.amount;
-                dailyData[t.date].balance += t.amount;
-            } else {
-                dailyData[t.date].expense += t.amount;
-                dailyData[t.date].balance -= t.amount;
-            }
-        }
-    });
-    
-    // Calculate cumulative balance
-    let runningBalance = 0;
-    const labels = [];
-    const balanceData = [];
-    
-    Object.keys(dailyData).sort().forEach(date => {
-        const day = new Date(date).getDate();
-        labels.push(day);
-        runningBalance += dailyData[date].balance;
-        balanceData.push(runningBalance);
-    });
-    
-    if (cashflowChart) {
-        cashflowChart.destroy();
-    }
-    
-    cashflowChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Saldo Harian',
-                data: balanceData,
-                borderColor: '#00ff88',
-                backgroundColor: 'rgba(0, 255, 136, 0.05)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 2,
-                pointBackgroundColor: '#00ff88'
-            }]
+  const canvas = document.getElementById('cashflowChart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const data = getSixMonthFinanceData();
+
+  if (cashflowChart) cashflowChart.destroy();
+
+  cashflowChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.labels,
+      datasets: [
+        {
+          label: 'Pemasukan',
+          data: data.incomeData,
+          borderColor: '#00ff88',
+          backgroundColor: 'rgba(0,255,136,.08)',
+          tension: .4,
+          fill: true
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: (context) => `Saldo: ${formatCurrency(context.raw)}`
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    ticks: { 
-                        color: '#fff',
-                        callback: (value) => formatCurrency(value)
-                    },
-                    grid: { color: 'rgba(255,255,255,0.05)' }
-                },
-                x: {
-                    ticks: { color: '#fff', stepSize: 5 },
-                    grid: { display: false }
-                }
-            }
+        {
+          label: 'Pengeluaran',
+          data: data.expenseData,
+          borderColor: '#ff4757',
+          backgroundColor: 'rgba(255,71,87,.08)',
+          tension: .4,
+          fill: true
         }
-    });
-}
-
-// Budget Planner Logic (can be accessed from settings or separate page)
-function getBudgetUsage() {
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    const usage = [];
-    
-    appData.budgets.forEach(budget => {
-        if (budget.month === currentMonth && budget.year === currentYear) {
-            const spent = appData.transactions
-                .filter(t => t.type === 'expense' && t.category === budget.category && new Date(t.date).getMonth() === currentMonth)
-                .reduce((sum, t) => sum + t.amount, 0);
-            
-            usage.push({
-                category: budget.category,
-                limit: budget.limit,
-                spent: spent,
-                percent: (spent / budget.limit) * 100
-            });
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#fff' } },
+        tooltip: {
+          callbacks: {
+            label: context => `${context.dataset.label}: ${formatCurrency(context.raw)}`
+          }
         }
-    });
-    
-    return usage;
-}
-
-// Function to update budget limits
-function updateBudgetLimit(category, newLimit) {
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    const budgetIndex = appData.budgets.findIndex(b => b.category === category && b.month === currentMonth && b.year === currentYear);
-    
-    if (budgetIndex !== -1) {
-        appData.budgets[budgetIndex].limit = newLimit;
-    } else {
-        appData.budgets.push({
-            id: Date.now() + Math.random(),
-            category: category,
-            limit: newLimit,
-            month: currentMonth,
-            year: currentYear
-        });
+      },
+      scales: {
+        y: {
+          ticks: { color: '#fff', callback: value => formatCurrency(value) },
+          grid: { color: 'rgba(255,255,255,.06)' }
+        },
+        x: {
+          ticks: { color: '#fff' },
+          grid: { display: false }
+        }
+      }
     }
-    saveBudgets();
+  });
+}
+
+function renderIncomeExpenseTrendChart() {
+  const canvas = document.getElementById('incomeExpenseTrendChart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const data = getSixMonthFinanceData();
+
+  if (trendChart) trendChart.destroy();
+
+  trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.labels,
+      datasets: [
+        {
+          label: 'Pemasukan',
+          data: data.incomeData,
+          borderColor: '#00ff88',
+          backgroundColor: 'rgba(0,255,136,.08)',
+          tension: .4,
+          fill: true
+        },
+        {
+          label: 'Pengeluaran',
+          data: data.expenseData,
+          borderColor: '#ff4757',
+          backgroundColor: 'rgba(255,71,87,.08)',
+          tension: .4,
+          fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#fff' } },
+        tooltip: {
+          callbacks: {
+            label: context => `${context.dataset.label}: ${formatCurrency(context.raw)}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          ticks: { color: '#fff', callback: value => formatCurrency(value) },
+          grid: { color: 'rgba(255,255,255,.06)' }
+        },
+        x: {
+          ticks: { color: '#fff' },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function renderExpensePieChart() {
+  const canvas = document.getElementById('pieChart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const categoryMap = {};
+
+  appData.transactions.forEach(t => {
+    if (t.type === 'expense') {
+      categoryMap[t.category] = (categoryMap[t.category] || 0) + Number(t.amount);
+    }
+  });
+
+  const labels = Object.keys(categoryMap);
+  const values = Object.values(categoryMap);
+
+  if (pieChart) pieChart.destroy();
+
+  pieChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels.map(c => `${getCategoryIcon(c)} ${c}`),
+      datasets: [{
+        data: values,
+        backgroundColor: [
+          '#00ff88',
+          '#ff4757',
+          '#ffa502',
+          '#1e90ff',
+          '#9b59b6',
+          '#e84393',
+          '#00cec9',
+          '#fdcb6e',
+          '#6c5ce7',
+          '#a4b0be'
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#fff', font: { size: 11 } }
+        },
+        tooltip: {
+          callbacks: {
+            label: context => {
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percent = total ? ((context.raw / total) * 100).toFixed(1) : 0;
+              return `${context.label}: ${formatCurrency(context.raw)} (${percent}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
 }
