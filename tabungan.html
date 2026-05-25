@@ -10,32 +10,44 @@
 <div class="app-container">
   <header class="glass-header">
     <button class="back-btn" onclick="window.location.href='index.html'">←</button>
-    <h2>Target Tabungan</h2>
-    <button class="add-btn" onclick="showTargetModal()">+ Target</button>
+    <h2>Pengaturan</h2>
+    <div style="width:40px;"></div>
   </header>
-  <div id="savingsList" class="savings-list"></div>
-  <div id="targetModal" class="modal">
-    <div class="modal-content glass">
-      <div class="modal-handle"></div>
-      <h3>Target Tabungan</h3>
-      <input type="hidden" id="targetId">
-      <input type="text" id="targetName" placeholder="Nama Target" class="premium-input">
-      <input type="text" id="targetAmount" placeholder="Nominal Target" class="premium-input money-input">
-      <input type="text" id="savedAmount" placeholder="Sudah Terkumpul" class="premium-input money-input">
-      <input type="date" id="targetDeadline" class="premium-input">
-      <button class="btn-primary" onclick="saveTarget()">Simpan Target</button>
-      <button class="btn-secondary" onclick="closeTargetModal()">Batal</button>
+
+  <div class="settings-section glass">
+    <h3>👤 Profil</h3>
+    <div class="input-group" style="margin-top:12px;">
+      <label>Nama Pengguna</label>
+      <input type="text" id="settingsUserName" class="premium-input">
     </div>
+    <button class="btn-primary" onclick="saveUserSettings()">Simpan Nama</button>
   </div>
-  <div id="depositModal" class="modal">
-    <div class="modal-content glass">
-      <div class="modal-handle"></div>
-      <h3>Tambah Setoran</h3>
-      <input type="hidden" id="depositTargetId">
-      <input type="text" id="depositAmount" placeholder="Jumlah Setoran" class="premium-input money-input">
-      <button class="btn-primary" onclick="addDeposit()">Tambah Setoran</button>
-      <button class="btn-secondary" onclick="closeDepositModal()">Batal</button>
-    </div>
+
+  <div class="settings-section glass">
+    <h3>🚧 Batas Pengeluaran</h3>
+    <p style="font-size:13px;line-height:1.6;opacity:.85;margin:10px 0;">
+      Atur sendiri batas pengeluaran per kategori. Aplikasi akan memberi peringatan jika pengeluaran mendekati atau melewati batas tersebut.
+    </p>
+    <button class="btn-primary" onclick="window.location.href='batas.html'">Atur Batas Pengeluaran</button>
+  </div>
+
+  <div class="settings-section glass">
+    <h3>📄 Laporan</h3>
+    <button class="btn-primary" onclick="showReportModal()">Preview Laporan</button>
+    <button class="btn-secondary" onclick="window.print()">Export PDF / Print</button>
+  </div>
+
+  <div class="settings-section glass">
+    <h3>⚠️ Reset Data</h3>
+    <button class="btn-danger" onclick="resetAllData()">Reset Semua Data</button>
+  </div>
+
+  <div class="settings-section glass">
+    <h3>ℹ️ Tentang</h3>
+    <p style="font-size:13px;line-height:1.6;opacity:.85;">
+      Dompetku v2.0<br>
+      Aplikasi keuangan pribadi berbasis lokal.
+    </p>
   </div>
 
   <nav class="bottom-nav">
@@ -55,17 +67,99 @@
       <span class="nav-icon">💸</span>
       <span class="nav-label">Utang</span>
     </a>
-    <a href="tabungan.html" class="nav-item active">
+    <a href="tabungan.html" class="nav-item">
       <span class="nav-icon">🎯</span>
       <span class="nav-label">Tabungan</span>
     </a>
-    <a href="pengaturan.html" class="nav-item">
+    <a href="pengaturan.html" class="nav-item active">
       <span class="nav-icon">⚙️</span>
       <span class="nav-label">Setting</span>
     </a>
   </nav>
 </div>
+
+<!-- MODAL PREVIEW LAPORAN -->
+<div class="modal" id="reportModal" onclick="handleModalOutsideClick(event)">
+  <div class="modal-content glass" id="reportModalContent">
+    <div class="modal-handle"></div>
+
+    <div class="report-title">📄 Laporan Keuangan</div>
+    <div class="report-subtitle" id="reportDate">Tanggal cetak: -</div>
+
+    <div class="report-section">
+      <div class="report-row">
+        <span style="opacity:.7;">Total Saldo</span>
+        <strong id="rptBalance">Rp 0</strong>
+      </div>
+      <div class="report-row">
+        <span style="opacity:.7;">Pemasukan Bulan Ini</span>
+        <strong class="positive" id="rptIncome">Rp 0</strong>
+      </div>
+      <div class="report-row">
+        <span style="opacity:.7;">Pengeluaran Bulan Ini</span>
+        <strong class="negative" id="rptExpense">Rp 0</strong>
+      </div>
+      <div class="report-row">
+        <span style="opacity:.7;">Selisih</span>
+        <strong id="rptDiff">Rp 0</strong>
+      </div>
+    </div>
+
+    <div style="font-weight:bold;margin-bottom:10px;">Transaksi Terakhir</div>
+    <div id="rptTransactions"></div>
+
+    <button class="modal-btn cancel" style="margin-top:16px;" onclick="closeReportModal()">Tutup</button>
+    <button class="modal-btn edit" onclick="window.print()">🖨️ Export / Print</button>
+  </div>
+</div>
+
 <script src="js/storage.js"></script>
 <script src="js/app.js"></script>
+<script>
+function showReportModal() {
+  const now = new Date();
+  const income = getMonthlyTotal('income', now.getMonth(), now.getFullYear());
+  const expense = getMonthlyTotal('expense', now.getMonth(), now.getFullYear());
+  const balance = getTotalBalance();
+  const diff = income - expense;
+
+  document.getElementById('reportDate').innerText = 'Tanggal cetak: ' + now.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('rptBalance').innerText = formatCurrency(balance);
+  document.getElementById('rptIncome').innerText = formatCurrency(income);
+  document.getElementById('rptExpense').innerText = formatCurrency(expense);
+
+  const diffEl = document.getElementById('rptDiff');
+  diffEl.innerText = (diff >= 0 ? '+' : '') + formatCurrency(diff);
+  diffEl.className = diff >= 0 ? 'positive' : 'negative';
+
+  const txList = appData.transactions.slice(0, 15);
+  document.getElementById('rptTransactions').innerHTML = txList.length === 0
+    ? '<div style="opacity:.6;font-size:13px;">Belum ada transaksi.</div>'
+    : txList.map(t => `
+        <div class="report-tx-item">
+          <span style="opacity:.6;">${new Date(t.date).toLocaleDateString('id-ID')}</span>
+          &nbsp;${getCategoryIcon(t.category)} ${t.category}
+          &nbsp;<strong class="${t.type === 'income' ? 'positive' : 'negative'}">
+            ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+          </strong>
+        </div>
+      `).join('');
+
+  document.getElementById('reportModal').classList.add('show');
+  document.getElementById('reportModal').style.display = 'flex';
+}
+
+function closeReportModal() {
+  const modal = document.getElementById('reportModal');
+  modal.style.display = 'none';
+  modal.classList.remove('show');
+}
+
+function handleModalOutsideClick(e) {
+  if (e.target === document.getElementById('reportModal')) {
+    closeReportModal();
+  }
+}
+</script>
 </body>
 </html>
