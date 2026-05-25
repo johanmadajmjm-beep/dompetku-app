@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Dompetku - Transaksi</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="glass-header">
+            <button class="back-btn" onclick="window.location.href='index.html'">←</button>
+            <h2>Transaksi</h2>
+            <div style="width: 40px;"></div>
+        </header>
+
+        <!-- Form Tambah Transaksi -->
+        <div class="form-container glass">
+            <h3 id="formTitle">Tambah Transaksi</h3>
+            <input type="hidden" id="editId" value="">
+            
+            <div class="input-group">
+                <label>Tipe Transaksi</label>
+                <div class="type-selector">
+                    <button class="type-btn" data-type="income" onclick="setType('income')">💰 Pemasukan</button>
+                    <button class="type-btn" data-type="expense" onclick="setType('expense')">💸 Pengeluaran</button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Nominal</label>
+                <input type="number" id="amount" placeholder="Rp 0" class="premium-input">
+            </div>
+
+            <div class="input-group">
+                <label>Kategori</label>
+                <select id="category" class="premium-select">
+                    <option value="makan">🍔 Makan</option>
+                    <option value="transport">🚗 Transport</option>
+                    <option value="belanja">🛍️ Belanja</option>
+                    <option value="gaji">💼 Gaji</option>
+                    <option value="usaha">📈 Usaha</option>
+                    <option value="tagihan">📄 Tagihan</option>
+                    <option value="kesehatan">🏥 Kesehatan</option>
+                    <option value="hiburan">🎬 Hiburan</option>
+                    <option value="pendidikan">📚 Pendidikan</option>
+                    <option value="lainnya">📌 Lainnya</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Tanggal</label>
+                <input type="date" id="date" class="premium-input">
+            </div>
+
+            <div class="input-group">
+                <label>Metode Pembayaran</label>
+                <select id="paymentMethod" class="premium-select">
+                    <option value="tunai">💵 Tunai</option>
+                    <option value="transfer">🏦 Transfer</option>
+                    <option value="kartu kredit">💳 Kartu Kredit</option>
+                    <option value="e-wallet">📱 E-Wallet</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Catatan</label>
+                <textarea id="note" rows="2" placeholder="Catatan tambahan..." class="premium-input"></textarea>
+            </div>
+
+            <button class="btn-primary" onclick="saveTransaction()">💾 Simpan Transaksi</button>
+            <button class="btn-secondary" onclick="resetForm()">↺ Reset</button>
+        </div>
+
+        <!-- Riwayat Transaksi -->
+        <div class="history-section">
+            <div class="section-title">
+                <h3>📜 Riwayat Transaksi</h3>
+                <div class="filter-bar">
+                    <input type="text" id="searchInput" placeholder="🔍 Cari..." class="search-input">
+                    <select id="filterCategory" class="filter-select">
+                        <option value="">Semua Kategori</option>
+                        <option value="makan">Makan</option>
+                        <option value="transport">Transport</option>
+                        <option value="belanja">Belanja</option>
+                        <option value="gaji">Gaji</option>
+                        <option value="usaha">Usaha</option>
+                        <option value="tagihan">Tagihan</option>
+                        <option value="kesehatan">Kesehatan</option>
+                        <option value="hiburan">Hiburan</option>
+                        <option value="pendidikan">Pendidikan</option>
+                        <option value="lainnya">Lainnya</option>
+                    </select>
+                    <select id="sortOrder" class="filter-select">
+                        <option value="desc">Terbaru</option>
+                        <option value="asc">Terlama</option>
+                    </select>
+                </div>
+            </div>
+            <div id="transactionList" class="transaction-list"></div>
+        </div>
+
+        <!-- Modal Edit/Hapus -->
+        <div id="modal" class="modal">
+            <div class="modal-content glass">
+                <h3>Opsi Transaksi</h3>
+                <button class="modal-btn edit" onclick="editTransactionFromModal()">✏️ Edit</button>
+                <button class="modal-btn delete" onclick="deleteTransactionFromModal()">🗑️ Hapus</button>
+                <button class="modal-btn cancel" onclick="closeModal()">Batal</button>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="nav-icon">🏠</span><span>Beranda</span>
+            </a>
+            <a href="transaksi.html" class="nav-item active">
+                <span class="nav-icon">📝</span><span>Transaksi</span>
+            </a>
+            <a href="analisis.html" class="nav-item">
+                <span class="nav-icon">📊</span><span>Analisis</span>
+            </a>
+            <a href="tabungan.html" class="nav-item">
+                <span class="nav-icon">🎯</span><span>Tabungan</span>
+            </a>
+            <a href="pinjaman.html" class="nav-item">
+                <span class="nav-icon">💳</span><span>Pinjaman</span>
+            </a>
+            <a href="pengaturan.html" class="nav-item">
+                <span class="nav-icon">⚙️</span><span>Pengaturan</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/transaksi.js"></script>
+</body>
+</html>

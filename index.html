@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Dompetku - Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="glass-header">
+            <div class="header-left">
+                <div class="greeting">Halo, <span id="userName">Pengguna</span></div>
+                <div class="date" id="currentDate"></div>
+            </div>
+            <div class="header-right">
+                <div class="avatar">👤</div>
+            </div>
+        </header>
+
+        <!-- Saldo Utama -->
+        <div class="balance-card glass">
+            <div class="balance-label">Total Saldo</div>
+            <div class="balance-amount" id="totalBalance">Rp 0</div>
+            <div class="balance-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Pemasukan Bulan Ini</span>
+                    <span class="stat-value positive" id="monthIncome">Rp 0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Pengeluaran Bulan Ini</span>
+                    <span class="stat-value negative" id="monthExpense">Rp 0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistik Ringkas -->
+        <div class="stats-row">
+            <div class="stat-card glass" onclick="window.location.href='tabungan.html'" style="cursor:pointer;">
+                <div class="stat-icon">🏦</div>
+                <div class="stat-info">
+                    <div class="stat-label">Total Tabungan</div>
+                    <div class="stat-number" id="totalSavings">Rp 0</div>
+                </div>
+            </div>
+            <div class="stat-card glass" onclick="window.location.href='pinjaman.html'" style="cursor:pointer;">
+                <div class="stat-icon">💳</div>
+                <div class="stat-info">
+                    <div class="stat-label">Total Pinjaman</div>
+                    <div class="stat-number negative" id="totalLoan">Rp 0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafik Cashflow -->
+        <div class="chart-container glass">
+            <div class="section-title">
+                <h3>Cashflow 30 Hari</h3>
+                <span class="info-icon">ⓘ</span>
+            </div>
+            <canvas id="cashflowChart" height="200"></canvas>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="action-btn glass" onclick="window.location.href='transaksi.html?type=income'">
+                <span class="action-icon">➕</span>
+                <span>Pemasukan</span>
+            </button>
+            <button class="action-btn glass" onclick="window.location.href='transaksi.html?type=expense'">
+                <span class="action-icon">➖</span>
+                <span>Pengeluaran</span>
+            </button>
+        </div>
+
+        <!-- Insight Otomatis -->
+        <div class="insight-section">
+            <div class="section-title">
+                <h3>💡 Insight & Rekomendasi</h3>
+            </div>
+            <div class="insight-card glass" id="insightContainer">
+                <div class="insight-text">Memuat insight...</div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item active">
+                <span class="nav-icon">🏠</span><span>Beranda</span>
+            </a>
+            <a href="transaksi.html" class="nav-item">
+                <span class="nav-icon">📝</span><span>Transaksi</span>
+            </a>
+            <a href="analisis.html" class="nav-item">
+                <span class="nav-icon">📊</span><span>Analisis</span>
+            </a>
+            <a href="tabungan.html" class="nav-item">
+                <span class="nav-icon">🎯</span><span>Tabungan</span>
+            </a>
+            <a href="pinjaman.html" class="nav-item">
+                <span class="nav-icon">💳</span><span>Pinjaman</span>
+            </a>
+            <a href="pengaturan.html" class="nav-item">
+                <span class="nav-icon">⚙️</span><span>Pengaturan</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

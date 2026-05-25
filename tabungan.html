@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Dompetku - Tabungan</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="glass-header">
+            <button class="back-btn" onclick="window.location.href='index.html'">←</button>
+            <h2>Target Tabungan</h2>
+            <button class="add-btn" onclick="showTargetModal()">+ Target</button>
+        </header>
+
+        <div id="savingsList" class="savings-list"></div>
+
+        <!-- Modal Target -->
+        <div id="targetModal" class="modal">
+            <div class="modal-content glass">
+                <h3 id="targetModalTitle">Tambah Target Tabungan</h3>
+                <input type="hidden" id="targetId">
+                <input type="text" id="targetName" placeholder="Nama Target" class="premium-input">
+                <input type="number" id="targetAmount" placeholder="Nominal Target" class="premium-input">
+                <input type="number" id="savedAmount" placeholder="Sudah Terkumpul" class="premium-input">
+                <input type="date" id="targetDeadline" class="premium-input">
+                <button class="btn-primary" onclick="saveTarget()">Simpan Target</button>
+                <button class="btn-secondary" onclick="closeTargetModal()">Batal</button>
+            </div>
+        </div>
+
+        <!-- Modal Setoran -->
+        <div id="depositModal" class="modal">
+            <div class="modal-content glass">
+                <h3>Tambah Setoran</h3>
+                <input type="hidden" id="depositTargetId">
+                <input type="number" id="depositAmount" placeholder="Jumlah Setoran" class="premium-input">
+                <button class="btn-primary" onclick="addDeposit()">Tambah Setoran</button>
+                <button class="btn-secondary" onclick="closeDepositModal()">Batal</button>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="nav-icon">🏠</span><span>Beranda</span>
+            </a>
+            <a href="transaksi.html" class="nav-item">
+                <span class="nav-icon">📝</span><span>Transaksi</span>
+            </a>
+            <a href="analisis.html" class="nav-item">
+                <span class="nav-icon">📊</span><span>Analisis</span>
+            </a>
+            <a href="tabungan.html" class="nav-item active">
+                <span class="nav-icon">🎯</span><span>Tabungan</span>
+            </a>
+            <a href="pinjaman.html" class="nav-item">
+                <span class="nav-icon">💳</span><span>Pinjaman</span>
+            </a>
+            <a href="pengaturan.html" class="nav-item">
+                <span class="nav-icon">⚙️</span><span>Pengaturan</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

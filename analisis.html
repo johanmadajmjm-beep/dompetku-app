@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Dompetku - Analisis</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="glass-header">
+            <button class="back-btn" onclick="window.location.href='index.html'">←</button>
+            <h2>Analisis Keuangan</h2>
+            <div style="width: 40px;"></div>
+        </header>
+
+        <!-- Ringkasan Statistik -->
+        <div class="stats-summary glass">
+            <div class="summary-item">
+                <span>Total Transaksi</span>
+                <strong id="totalTransactions">0</strong>
+            </div>
+            <div class="summary-item">
+                <span>Rata-rata Pemasukan</span>
+                <strong id="avgIncome">Rp 0</strong>
+            </div>
+            <div class="summary-item">
+                <span>Rata-rata Pengeluaran</span>
+                <strong id="avgExpense">Rp 0</strong>
+            </div>
+        </div>
+
+        <!-- Pie Chart Kategori Pengeluaran -->
+        <div class="chart-container glass">
+            <h3>📊 Pengeluaran per Kategori</h3>
+            <canvas id="pieChart" height="200"></canvas>
+        </div>
+
+        <!-- Bar Chart Pemasukan vs Pengeluaran -->
+        <div class="chart-container glass">
+            <h3>📈 Pemasukan vs Pengeluaran (6 Bulan)</h3>
+            <canvas id="barChart" height="200"></canvas>
+        </div>
+
+        <!-- Trend Bulanan -->
+        <div class="trend-section glass">
+            <h3>📉 Trend Bulanan</h3>
+            <div id="trendInfo" class="trend-info"></div>
+        </div>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="nav-icon">🏠</span><span>Beranda</span>
+            </a>
+            <a href="transaksi.html" class="nav-item">
+                <span class="nav-icon">📝</span><span>Transaksi</span>
+            </a>
+            <a href="analisis.html" class="nav-item active">
+                <span class="nav-icon">📊</span><span>Analisis</span>
+            </a>
+            <a href="tabungan.html" class="nav-item">
+                <span class="nav-icon">🎯</span><span>Tabungan</span>
+            </a>
+            <a href="pinjaman.html" class="nav-item">
+                <span class="nav-icon">💳</span><span>Pinjaman</span>
+            </a>
+            <a href="pengaturan.html" class="nav-item">
+                <span class="nav-icon">⚙️</span><span>Pengaturan</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/analisis.js"></script>
+</body>
+</html>
