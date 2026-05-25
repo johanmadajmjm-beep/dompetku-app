@@ -1,74 +1,68 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Dompetku - Pengaturan</title>
-    <link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Dompetku - Pengaturan</title>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div class="app-container">
-        <header class="glass-header">
-            <button class="back-btn" onclick="window.location.href='index.html'">←</button>
-            <h2>Pengaturan</h2>
-            <div style="width: 40px;"></div>
-        </header>
+<div class="app-container">
+  <header class="glass-header">
+    <button class="back-btn" onclick="window.location.href='index.html'">←</button>
+    <h2>Pengaturan</h2>
+    <div style="width:40px;"></div>
+  </header>
 
-        <div class="settings-section glass">
-            <h3>👤 Profil</h3>
-            <div class="setting-item">
-                <label>Nama Pengguna</label>
-                <input type="text" id="settingsUserName" class="premium-input">
-            </div>
-        </div>
-
-        <div class="settings-section glass">
-            <h3>🎨 Tampilan</h3>
-            <div class="setting-item">
-                <label>Mode Tema</label>
-                <select id="themeSelect" class="premium-select">
-                    <option value="dark">Dark Premium</option>
-                    <option value="light">Light Mode</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="settings-section glass">
-            <h3>💾 Data</h3>
-            <button class="btn-secondary" onclick="exportData()">📤 Export JSON</button>
-            <input type="file" id="importFile" accept=".json" style="display: none;">
-            <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📥 Import JSON</button>
-            <button class="btn-danger" onclick="resetAllData()">⚠️ Reset Semua Data</button>
-        </div>
-
-        <div class="settings-section glass">
-            <h3>ℹ️ Tentang</h3>
-            <p>Dompetku v1.0<br>Aplikasi Keuangan Pribadi Premium</p>
-        </div>
-
-        <nav class="bottom-nav">
-            <a href="index.html" class="nav-item">
-                <span class="nav-icon">🏠</span><span>Beranda</span>
-            </a>
-            <a href="transaksi.html" class="nav-item">
-                <span class="nav-icon">📝</span><span>Transaksi</span>
-            </a>
-            <a href="analisis.html" class="nav-item">
-                <span class="nav-icon">📊</span><span>Analisis</span>
-            </a>
-            <a href="tabungan.html" class="nav-item">
-                <span class="nav-icon">🎯</span><span>Tabungan</span>
-            </a>
-            <a href="pinjaman.html" class="nav-item">
-                <span class="nav-icon">💳</span><span>Pinjaman</span>
-            </a>
-            <a href="pengaturan.html" class="nav-item active">
-                <span class="nav-icon">⚙️</span><span>Pengaturan</span>
-            </a>
-        </nav>
+  <div class="settings-section glass">
+    <h3>👤 Profil</h3>
+    <div class="setting-item">
+      <label>Nama Pengguna</label>
+      <input type="text" id="settingsUserName" class="premium-input">
     </div>
+    <button class="btn-primary" onclick="saveUserSettings()">Simpan Nama</button>
+  </div>
 
-    <script src="js/storage.js"></script>
-    <script src="js/app.js"></script>
+  <div class="settings-section glass">
+    <h3>🚧 Batas Pengeluaran</h3>
+    <p style="font-size:13px;line-height:1.6;opacity:.85;margin-bottom:12px;">
+      Atur sendiri batas pengeluaran per kategori. Aplikasi akan memberi peringatan jika pengeluaran mendekati atau melewati batas tersebut.
+    </p>
+    <button class="btn-primary" onclick="window.location.href='batas.html'">Atur Batas Pengeluaran</button>
+  </div>
+
+  <div class="settings-section glass">
+    <h3>📄 Laporan</h3>
+    <button class="btn-primary" onclick="showReportPreview()">Preview Laporan</button>
+    <button class="btn-secondary" onclick="window.print()">Export PDF / Print</button>
+  </div>
+
+  <div id="reportPreview" class="settings-section glass" style="display:none;"></div>
+
+  <div class="settings-section glass">
+    <h3>⚠️ Reset Data</h3>
+    <button class="btn-danger" onclick="resetAllData()">Reset Semua Data</button>
+  </div>
+
+  <div class="settings-section glass">
+    <h3>ℹ️ Tentang</h3>
+    <p style="font-size:13px;line-height:1.6;opacity:.85;">
+      Dompetku v2.0<br>
+      Aplikasi keuangan pribadi berbasis lokal.
+    </p>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">🏠 Beranda</a>
+    <a href="transaksi.html" class="nav-item">📝 Transaksi</a>
+    <a href="analisis.html" class="nav-item">📊 Analisis</a>
+    <a href="batas.html" class="nav-item">🚧 Batas</a>
+    <a href="tabungan.html" class="nav-item">🎯 Tabungan</a>
+    <a href="pengaturan.html" class="nav-item active">⚙️ Setting</a>
+  </nav>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
