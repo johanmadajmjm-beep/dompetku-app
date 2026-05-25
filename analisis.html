@@ -14,7 +14,6 @@
     <h2>Analisis Keuangan</h2>
     <div style="width:40px;"></div>
   </header>
-
   <div class="stats-summary glass">
     <div class="summary-item">
       <span>Total Transaksi</span>
@@ -29,32 +28,46 @@
       <strong id="avgExpense">Rp 0</strong>
     </div>
   </div>
-
   <div class="chart-container glass">
     <h3>📈 Trend Pemasukan & Pengeluaran</h3>
     <canvas id="incomeExpenseTrendChart" height="200"></canvas>
   </div>
-
   <div class="chart-container glass">
     <h3>📊 Pengeluaran per Kategori</h3>
     <canvas id="pieChart" height="200"></canvas>
   </div>
-
   <div class="trend-section glass">
     <h3>📉 Ringkasan Bulanan</h3>
     <div id="trendInfo" class="trend-info"></div>
   </div>
 
   <nav class="bottom-nav">
-    <a href="index.html" class="nav-item">🏠 Beranda</a>
-    <a href="transaksi.html" class="nav-item">📝 Transaksi</a>
-    <a href="analisis.html" class="nav-item active">📊 Analisis</a>
-    <a href="batas.html" class="nav-item">🚧 Batas</a>
-    <a href="tabungan.html" class="nav-item">🎯 Tabungan</a>
-    <a href="pengaturan.html" class="nav-item">⚙️ Setting</a>
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Beranda</span>
+    </a>
+    <a href="transaksi.html" class="nav-item">
+      <span class="nav-icon">📝</span>
+      <span class="nav-label">Transaksi</span>
+    </a>
+    <a href="analisis.html" class="nav-item active">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Analisis</span>
+    </a>
+    <a href="utang.html" class="nav-item">
+      <span class="nav-icon">💸</span>
+      <span class="nav-label">Utang</span>
+    </a>
+    <a href="tabungan.html" class="nav-item">
+      <span class="nav-icon">🎯</span>
+      <span class="nav-label">Tabungan</span>
+    </a>
+    <a href="pengaturan.html" class="nav-item">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Setting</span>
+    </a>
   </nav>
 </div>
-
 <script src="js/storage.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/analisis.js"></script>
