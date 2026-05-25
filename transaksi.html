@@ -67,8 +67,10 @@
       <textarea id="note" rows="2" class="premium-input" placeholder="Catatan tambahan..."></textarea>
     </div>
 
-    <button class="btn-primary" onclick="saveTransactionFromForm()">💾 Simpan Transaksi</button>
-    <button class="btn-secondary" onclick="resetTransactionForm()">↺ Reset</button>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button onclick="resetTransactionForm()" style="flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(240,244,255,0.7);font-weight:600;font-size:13px;font-family:inherit;cursor:pointer;">↺ Reset</button>
+      <button onclick="saveTransactionFromForm()" style="flex:2;padding:12px;border-radius:10px;border:none;background:#00e87a;color:#070c18;font-weight:700;font-size:13px;font-family:inherit;cursor:pointer;">💾 Simpan</button>
+    </div>
   </div>
 
   <div class="history-section">
