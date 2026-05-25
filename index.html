@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>FinancialFreedom</title>
+  <script>
+    if (!sessionStorage.getItem('splashSeen')) {
+      sessionStorage.setItem('splashSeen', '1');
+      window.location.replace('splash.html');
+    }
+  </script>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   <style>
@@ -291,5 +297,7 @@
   }
 })();
 </script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
