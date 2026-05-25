@@ -1,57 +1,58 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const path = window.location.pathname;
+  // Deteksi halaman berdasarkan elemen yang ada, bukan URL path
+  // Lebih reliable untuk GitHub Pages, localhost, maupun file://
 
-  if (path.includes('index.html') || path.endsWith('/') || path === '') {
+  if (document.getElementById('totalBalance')) {
     initDashboard();
   }
 
-  if (path.includes('tabungan.html')) {
+  if (document.getElementById('savingsList')) {
     initSavingsPage();
   }
 
-  if (path.includes('pinjaman.html')) {
+  if (document.getElementById('borrowList')) {
     initLoansPage();
   }
 
-  if (path.includes('pengaturan.html')) {
+  if (document.getElementById('settingsUserName')) {
     initSettingsPage();
   }
 });
 
 function initDashboard() {
-  document.getElementById('currentDate').innerText = new Date().toLocaleDateString('id-ID', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  });
+  const dateEl = document.getElementById('currentDate');
+  if (dateEl) {
+    const now = new Date();
+    const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    dateEl.innerText = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+  }
 
-  document.getElementById('userName').innerText = appData.settings.userName || 'Pengguna';
+  const userNameEl = document.getElementById('userName');
+  if (userNameEl) {
+    userNameEl.innerText = appData.settings.userName || 'Pengguna';
+  }
 
   updateDashboardStats();
-  renderCashflowChart();
   renderDashboardInsights();
-  renderDashboardLimitWarnings();
 }
 
 function updateDashboardStats() {
   const now = new Date();
-
-  const totalBalance = getTotalBalance();
-  const monthIncome = getMonthlyTotal('income', now.getMonth(), now.getFullYear());
-  const monthExpense = getMonthlyTotal('expense', now.getMonth(), now.getFullYear());
-
-  const totalSavings = appData.savingsGoals.reduce((sum, g) => sum + Number(g.savedAmount || 0), 0);
-
-  const totalLoan = appData.loans
+  const totalBalance  = getTotalBalance();
+  const monthIncome   = getMonthlyTotal('income',  now.getMonth(), now.getFullYear());
+  const monthExpense  = getMonthlyTotal('expense', now.getMonth(), now.getFullYear());
+  const totalSavings  = appData.savingsGoals.reduce((s, g) => s + Number(g.savedAmount || 0), 0);
+  const totalLoan     = appData.loans
     .filter(l => l.status === 'active')
-    .reduce((sum, l) => sum + Number(l.amount || 0), 0);
+    .reduce((s, l) => s + Number(l.amount || 0), 0);
 
-  document.getElementById('totalBalance').innerText = formatCurrency(totalBalance);
-  document.getElementById('monthIncome').innerText = formatCurrency(monthIncome);
-  document.getElementById('monthExpense').innerText = formatCurrency(monthExpense);
-  document.getElementById('totalSavings').innerText = formatCurrency(totalSavings);
-  document.getElementById('totalLoan').innerText = formatCurrency(totalLoan);
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+  set('totalBalance',  formatCurrency(totalBalance));
+  set('monthIncome',   formatCurrency(monthIncome));
+  set('monthExpense',  formatCurrency(monthExpense));
+  set('totalSavings',  formatCurrency(totalSavings));
+  set('totalLoan',     formatCurrency(totalLoan));
 }
 
 function renderDashboardInsights() {
@@ -59,9 +60,11 @@ function renderDashboardInsights() {
   if (!box) return;
 
   const now = new Date();
-  const monthIncome = getMonthlyTotal('income', now.getMonth(), now.getFullYear());
+  const monthIncome  = getMonthlyTotal('income',  now.getMonth(), now.getFullYear());
   const monthExpense = getMonthlyTotal('expense', now.getMonth(), now.getFullYear());
+  const totalBalance = getTotalBalance();
 
+  // Kategori pengeluaran terbesar bulan ini
   const categoryExpense = {};
   appData.transactions.forEach(t => {
     const d = new Date(t.date);
@@ -70,87 +73,50 @@ function renderDashboardInsights() {
     }
   });
 
-  let topCategory = '';
-  let topAmount = 0;
-
-  Object.entries(categoryExpense).forEach(([category, amount]) => {
-    if (amount > topAmount) {
-      topCategory = category;
-      topAmount = amount;
-    }
+  let topCategory = '', topAmount = 0;
+  Object.entries(categoryExpense).forEach(([cat, amt]) => {
+    if (amt > topAmount) { topCategory = cat; topAmount = amt; }
   });
 
   const insights = [];
 
-  if (monthIncome === 0 && monthExpense === 0) {
-    insights.push('Mulai catat pemasukan dan pengeluaran agar aplikasi bisa membaca pola keuanganmu.');
+  // Belum ada data sama sekali
+  if (appData.transactions.length === 0) {
+    insights.push('👋 Selamat datang! Mulai catat transaksi pertamamu untuk melihat insight keuangan.');
+  } else if (monthIncome === 0 && monthExpense === 0) {
+    insights.push('📅 Belum ada transaksi bulan ini. Yuk mulai catat!');
   } else {
-    insights.push(`Bulan ini pemasukan ${formatCurrency(monthIncome)} dan pengeluaran ${formatCurrency(monthExpense)}.`);
-  }
+    // Ringkasan bulan ini
+    insights.push('📊 Bulan ini pemasukan ' + formatCurrency(monthIncome) + ' dan pengeluaran ' + formatCurrency(monthExpense) + '.');
 
-  if (topCategory) {
-    insights.push(`Pengeluaran terbesar bulan ini adalah ${getCategoryIcon(topCategory)} ${topCategory}, sebesar ${formatCurrency(topAmount)}.`);
-  }
-
-  if (monthExpense > monthIncome && monthIncome > 0) {
-    insights.push('Pengeluaran bulan ini lebih besar dari pemasukan. Perlu evaluasi pengeluaran.');
-  }
-
-  box.innerHTML = insights.map(text => `<div class="insight-text" style="margin-bottom:8px;">${text}</div>`).join('');
-}
-
-function renderDashboardLimitWarnings() {
-  const container = document.getElementById('limitWarningContainer');
-  if (!container) return;
-
-  const now = new Date();
-  const limits = appData.spendingLimits.filter(l =>
-    Number(l.month) === now.getMonth() &&
-    Number(l.year) === now.getFullYear()
-  );
-
-  if (limits.length === 0) {
-    container.innerHTML = `
-      <div class="insight-card glass">
-        <div class="insight-text">
-          Belum ada batas pengeluaran. Kamu bisa membuat batas sendiri di menu Batas.
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = limits.map(limit => {
-    const used = getCategoryExpense(limit.category, now.getMonth(), now.getFullYear());
-    const percent = limit.amount > 0 ? (used / limit.amount) * 100 : 0;
-
-    let status = 'Aman';
-    let cls = 'limit-safe';
-
-    if (percent >= 100) {
-      status = `Melebihi ${formatCurrency(used - limit.amount)}`;
-      cls = 'limit-danger';
-    } else if (percent >= 80) {
-      status = 'Hampir habis';
-      cls = 'limit-warning';
+    // Pengeluaran terbesar
+    if (topCategory) {
+      insights.push(getCategoryIcon(topCategory) + ' Pengeluaran terbesar: <strong>' + topCategory + '</strong> sebesar ' + formatCurrency(topAmount) + '.');
     }
 
-    return `
-      <div class="savings-item ${cls}">
-        <strong>${getCategoryIcon(limit.category)} ${limit.category}</strong>
-        <div style="font-size:13px;margin-top:6px;">
-          ${formatCurrency(used)} / ${formatCurrency(limit.amount)}
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width:${Math.min(percent, 100)}%"></div>
-        </div>
-        <div style="font-size:12px;">${percent.toFixed(1)}% - ${status}</div>
-      </div>
-    `;
-  }).join('');
+    // Evaluasi keuangan
+    if (monthExpense > monthIncome && monthIncome > 0) {
+      insights.push('⚠️ Pengeluaran melebihi pemasukan bulan ini. Saatnya evaluasi pengeluaran.');
+    } else if (monthIncome > 0 && monthExpense <= monthIncome * 0.5) {
+      insights.push('🎉 Hebat! Pengeluaranmu masih di bawah 50% dari pemasukan bulan ini.');
+    } else if (monthIncome > 0) {
+      insights.push('💡 Kamu sudah menggunakan ' + ((monthExpense / monthIncome) * 100).toFixed(0) + '% dari pemasukanmu bulan ini.');
+    }
+
+    // Saldo total
+    if (totalBalance < 0) {
+      insights.push('🔴 Total saldo kamu sedang minus. Perhatikan pengeluaranmu.');
+    } else if (totalBalance > 0) {
+      insights.push('✅ Total saldo kamu saat ini ' + formatCurrency(totalBalance) + '.');
+    }
+  }
+
+  box.innerHTML = insights
+    .map(text => '<div class="insight-text" style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06);">' + text + '</div>')
+    .join('');
 }
 
-/* TABUNGAN */
+/* ── TABUNGAN ── */
 function initSavingsPage() {
   initMoneyInputs();
   renderSavingsList();
@@ -161,26 +127,25 @@ function renderSavingsList() {
   if (!container) return;
 
   if (appData.savingsGoals.length === 0) {
-    container.innerHTML = '<div class="glass" style="padding:40px;text-align:center;margin:16px;">Belum ada target tabungan.</div>';
+    container.innerHTML = '<div class="glass" style="padding:40px;text-align:center;margin:16px;opacity:.6;">Belum ada target tabungan.</div>';
     return;
   }
 
   container.innerHTML = appData.savingsGoals.map(goal => {
     const progress = goal.amount > 0 ? ((Number(goal.savedAmount || 0) / Number(goal.amount)) * 100) : 0;
-
     return `
       <div class="savings-item">
         <div style="display:flex;justify-content:space-between;">
           <strong>🎯 ${goal.name}</strong>
-          <button onclick="editTarget(${goal.id})" style="background:none;border:none;color:#00ff88;">✏️</button>
+          <button onclick="editTarget(${goal.id})" style="background:none;border:none;color:#00e87a;cursor:pointer;">✏️</button>
         </div>
-        <div>Target: ${formatCurrency(goal.amount)}</div>
-        <div>Terkumpul: ${formatCurrency(goal.savedAmount || 0)}</div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(progress, 100)}%"></div></div>
-        <div style="font-size:12px;">${progress.toFixed(1)}%</div>
+        <div style="font-size:13px;opacity:.7;margin-top:4px;">Target: ${formatCurrency(goal.amount)}</div>
+        <div style="font-size:13px;opacity:.7;">Terkumpul: ${formatCurrency(goal.savedAmount || 0)}</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(progress,100)}%"></div></div>
+        <div style="font-size:12px;margin-top:4px;opacity:.6;">${progress.toFixed(1)}%</div>
         <div style="display:flex;gap:8px;margin-top:12px;">
-          <button onclick="openDepositModal(${goal.id})" style="flex:1;padding:8px;background:#00ff88;border:0;border-radius:8px;color:#0a0f1e;">+ Setoran</button>
-          <button onclick="deleteTarget(${goal.id})" style="flex:1;padding:8px;background:rgba(255,71,87,.2);border:1px solid #ff4757;border-radius:8px;color:#ff4757;">Hapus</button>
+          <button onclick="openDepositModal(${goal.id})" style="flex:1;padding:10px;background:#00e87a;border:0;border-radius:10px;color:#070c18;font-weight:700;cursor:pointer;">+ Setoran</button>
+          <button onclick="deleteTarget(${goal.id})" style="flex:1;padding:10px;background:rgba(255,71,87,.15);border:1px solid #ff4757;border-radius:10px;color:#ff4757;cursor:pointer;">Hapus</button>
         </div>
       </div>
     `;
@@ -199,7 +164,6 @@ function showTargetModal() {
 function editTarget(id) {
   const goal = appData.savingsGoals.find(g => String(g.id) === String(id));
   if (!goal) return;
-
   document.getElementById('targetId').value = goal.id;
   document.getElementById('targetName').value = goal.name;
   document.getElementById('targetAmount').value = formatMoneyInput(goal.amount);
@@ -214,15 +178,9 @@ function saveTarget() {
   const amount = parseMoney(document.getElementById('targetAmount').value);
   const savedAmount = parseMoney(document.getElementById('savedAmount').value);
   const deadline = document.getElementById('targetDeadline').value;
-
-  if (!name || amount <= 0) {
-    alert('Isi nama dan nominal target.');
-    return;
-  }
-
+  if (!name || amount <= 0) { alert('Isi nama dan nominal target.'); return; }
   if (id) updateSavingsGoal(id, { name, amount, savedAmount, deadline });
   else addSavingsGoal({ name, amount, savedAmount, deadline });
-
   closeTargetModal();
   renderSavingsList();
 }
@@ -242,24 +200,17 @@ function openDepositModal(id) {
 function addDeposit() {
   const id = document.getElementById('depositTargetId').value;
   const amount = parseMoney(document.getElementById('depositAmount').value);
-
   const goal = appData.savingsGoals.find(g => String(g.id) === String(id));
   if (!goal || amount <= 0) return;
-
   updateSavingsGoal(id, { savedAmount: Number(goal.savedAmount || 0) + amount });
   closeDepositModal();
   renderSavingsList();
 }
 
-function closeTargetModal() {
-  document.getElementById('targetModal').style.display = 'none';
-}
+function closeTargetModal()  { document.getElementById('targetModal').style.display  = 'none'; }
+function closeDepositModal() { document.getElementById('depositModal').style.display = 'none'; }
 
-function closeDepositModal() {
-  document.getElementById('depositModal').style.display = 'none';
-}
-
-/* PINJAMAN */
+/* ── PINJAMAN ── */
 let currentLoanType = 'borrow';
 
 function initLoansPage() {
@@ -269,42 +220,38 @@ function initLoansPage() {
 
 function switchLoanTab(type) {
   currentLoanType = type;
-  document.querySelectorAll('.loan-tab').forEach((tab, index) => {
-    tab.classList.toggle('active', (type === 'borrow' && index === 0) || (type === 'lend' && index === 1));
+  document.querySelectorAll('.loan-tab').forEach((tab, i) => {
+    tab.classList.toggle('active', (type === 'borrow' && i === 0) || (type === 'lend' && i === 1));
   });
-
   document.getElementById('borrowList').style.display = type === 'borrow' ? 'block' : 'none';
-  document.getElementById('lendList').style.display = type === 'lend' ? 'block' : 'none';
-
+  document.getElementById('lendList').style.display   = type === 'lend'   ? 'block' : 'none';
   renderLoans();
 }
 
 function renderLoans() {
   const borrowContainer = document.getElementById('borrowList');
-  const lendContainer = document.getElementById('lendList');
+  const lendContainer   = document.getElementById('lendList');
   if (!borrowContainer || !lendContainer) return;
-
   renderLoanList(appData.loans.filter(l => l.type === 'borrow'), borrowContainer);
-  renderLoanList(appData.loans.filter(l => l.type === 'lend'), lendContainer);
+  renderLoanList(appData.loans.filter(l => l.type === 'lend'),   lendContainer);
 }
 
 function renderLoanList(loans, container) {
   if (loans.length === 0) {
-    container.innerHTML = '<div class="glass" style="padding:40px;text-align:center;margin:16px;">Belum ada data pinjaman.</div>';
+    container.innerHTML = '<div class="glass" style="padding:40px;text-align:center;margin:16px;opacity:.6;">Belum ada data pinjaman.</div>';
     return;
   }
-
   container.innerHTML = loans.map(loan => `
     <div class="loan-item">
       <div style="display:flex;justify-content:space-between;">
         <strong>${loan.name}</strong>
-        <span>${loan.status === 'paid' ? 'Lunas' : loan.status === 'overdue' ? 'Terlambat' : 'Aktif'}</span>
+        <span style="font-size:12px;opacity:.7;">${loan.status === 'paid' ? '✅ Lunas' : loan.status === 'overdue' ? '⚠️ Terlambat' : '🕐 Aktif'}</span>
       </div>
       <div style="font-size:20px;font-weight:bold;margin:8px 0;">${formatCurrency(loan.amount)}</div>
-      <div style="font-size:12px;">Jatuh tempo: ${loan.dueDate || '-'}</div>
-      <div class="loan-actions">
-        <button onclick="editLoan(${loan.id})">Edit</button>
-        <button onclick="deleteLoanItem(${loan.id})">Hapus</button>
+      <div style="font-size:12px;opacity:.6;">Jatuh tempo: ${loan.dueDate || '-'}</div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button onclick="editLoan(${loan.id})" style="flex:1;padding:8px;background:rgba(0,232,122,.12);border:1px solid #00e87a;border-radius:8px;color:#00e87a;cursor:pointer;">Edit</button>
+        <button onclick="deleteLoanItem(${loan.id})" style="flex:1;padding:8px;background:rgba(255,71,87,.12);border:1px solid #ff4757;border-radius:8px;color:#ff4757;cursor:pointer;">Hapus</button>
       </div>
     </div>
   `).join('');
@@ -324,7 +271,6 @@ function showLoanModal() {
 function editLoan(id) {
   const loan = appData.loans.find(l => String(l.id) === String(id));
   if (!loan) return;
-
   document.getElementById('loanId').value = loan.id;
   document.getElementById('loanName').value = loan.name;
   document.getElementById('loanAmount').value = formatMoneyInput(loan.amount);
@@ -343,15 +289,9 @@ function saveLoan() {
   const dueDate = document.getElementById('loanDueDate').value;
   const status = document.getElementById('loanStatus').value;
   const type = document.getElementById('loanTypeSelect').value;
-
-  if (!name || amount <= 0) {
-    alert('Isi nama dan nominal pinjaman.');
-    return;
-  }
-
+  if (!name || amount <= 0) { alert('Isi nama dan nominal pinjaman.'); return; }
   if (id) updateLoan(id, { name, amount, installment, dueDate, status, type });
   else addLoan({ name, amount, installment, dueDate, status, type });
-
   closeLoanModal();
   renderLoans();
 }
@@ -362,11 +302,9 @@ function deleteLoanItem(id) {
   renderLoans();
 }
 
-function closeLoanModal() {
-  document.getElementById('loanModal').style.display = 'none';
-}
+function closeLoanModal() { document.getElementById('loanModal').style.display = 'none'; }
 
-/* SETTINGS */
+/* ── SETTINGS ── */
 function initSettingsPage() {
   const nameInput = document.getElementById('settingsUserName');
   if (nameInput) nameInput.value = appData.settings.userName || 'Pengguna';
@@ -377,35 +315,4 @@ function saveUserSettings() {
   appData.settings.userName = name;
   saveSettings();
   alert('Pengaturan disimpan.');
-}
-
-function showReportPreview() {
-  const box = document.getElementById('reportPreview');
-  if (!box) return;
-
-  const now = new Date();
-  const income = getMonthlyTotal('income', now.getMonth(), now.getFullYear());
-  const expense = getMonthlyTotal('expense', now.getMonth(), now.getFullYear());
-  const balance = getTotalBalance();
-
-  const latest = appData.transactions.slice(0, 20).map(t => `
-    <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1);">
-      ${new Date(t.date).toLocaleDateString('id-ID')} -
-      ${getCategoryIcon(t.category)} ${t.category} -
-      ${t.type === 'income' ? '+' : '-'} ${formatCurrency(t.amount)}
-    </div>
-  `).join('');
-
-  box.style.display = 'block';
-  box.innerHTML = `
-    <h3>Preview Laporan Keuangan</h3>
-    <p>Tanggal cetak: ${now.toLocaleDateString('id-ID')}</p>
-    <br>
-    <p>Total saldo: <strong>${formatCurrency(balance)}</strong></p>
-    <p>Pemasukan bulan ini: <strong class="positive">${formatCurrency(income)}</strong></p>
-    <p>Pengeluaran bulan ini: <strong class="negative">${formatCurrency(expense)}</strong></p>
-    <br>
-    <h4>Transaksi terakhir</h4>
-    ${latest || '<p>Belum ada transaksi.</p>'}
-  `;
 }
