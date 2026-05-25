@@ -2,7 +2,7 @@
 let currentTransactionId = null;
 let currentType = 'expense';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoadedinitMoneyInputs();', () => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('type') === 'income') {
         setType('income');
@@ -32,7 +32,7 @@ function setType(type) {
 
 function saveTransaction() {
     const id = document.getElementById('editId').value;
-    const amount = parseFloat(document.getElementById('amount').value);
+    const amount = parseMoney(document.getElementById('amount').value);
     const category = document.getElementById('category').value;
     const date = document.getElementById('date').value;
     const paymentMethod = document.getElementById('paymentMethod').value;
