@@ -9,12 +9,13 @@ function getFilteredTrendData(mode, year, month) {
   const expenseData = [];
 
   if (mode === 'year') {
-    // 12 bulan dalam tahun yang dipilih
+    const now = new Date();
+    const y = now.getFullYear();
+    const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
     for (let m = 0; m < 12; m++) {
-      const date = new Date(year, m, 1);
-      labels.push(date.toLocaleString('id-ID', { month: 'short' }));
-      incomeData.push(getMonthlyTotal('income', m, year));
-      expenseData.push(getMonthlyTotal('expense', m, year));
+      labels.push(monthNames[m]);
+      incomeData.push(getMonthlyTotal('income', m, y));
+      expenseData.push(getMonthlyTotal('expense', m, y));
     }
   } else if (mode === 'month') {
     // 6 bulan terakhir (default)
