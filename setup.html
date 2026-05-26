@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <script src="js/auth.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>FinancialFreedom — Setup</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Montserrat:wght@900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <style>
+    body {
+      background: #070c18;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,232,122,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(59,130,246,0.06) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .setup-wrap {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 420px;
+      padding: 24px 20px 40px;
+    }
+
+    .setup-logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .setup-logo .coin {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f7c948, #e8a200);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 12px;
+      box-shadow: 0 0 24px rgba(247,201,72,0.3);
+      animation: coinFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes coinFloat {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .setup-logo h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 40%, #00e87a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .setup-logo p {
+      font-size: 12px;
+      color: rgba(240,244,255,0.5);
+      margin-top: 4px;
+    }
+
+    .setup-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 24px 20px;
+      backdrop-filter: blur(20px);
+    }
+
+    .setup-card h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .setup-card p {
+      font-size: 12px;
+      color: rgba(240,244,255,0.5);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .input-wrap {
+      margin-bottom: 14px;
+    }
+
+    .input-wrap label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(240,244,255,0.5);
+      margin-bottom: 6px;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      color: #f0f4ff;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-wrap input:focus {
+      border-color: rgba(0,232,122,0.4);
+      background: rgba(0,232,122,0.04);
+    }
+
+    .input-wrap .hint {
+      font-size: 10px;
+      color: rgba(240,244,255,0.35);
+      margin-top: 4px;
+    }
+
+    .hint-warn {
+      color: rgba(255,165,0,0.7) !important;
+    }
+
+    .btn-setup {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      background: #00e87a;
+      color: #070c18;
+      font-size: 15px;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(0,232,122,0.3);
+    }
+
+    .btn-setup:active { transform: scale(0.97); }
+
+    .error-msg {
+      background: rgba(255,71,87,0.1);
+      border: 1px solid rgba(255,71,87,0.3);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #ff4757;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .step-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      transition: all 0.3s ease;
+    }
+
+    .step-dot.active {
+      background: #00e87a;
+      width: 20px;
+      border-radius: 4px;
+    }
+
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 44px; }
+    .toggle-pass {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(240,244,255,0.4);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="setup-wrap">
+  <div class="setup-logo">
+    <div class="coin">🪙</div>
+    <h1>FinancialFreedom</h1>
+    <p>Buat akun untuk melindungi data keuanganmu</p>
+  </div>
+
+  <div class="step-indicator">
+    <div class="step-dot active" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-dot" id="dot3"></div>
+  </div>
+
+  <div class="setup-card">
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- STEP 1: Username -->
+    <div id="step1">
+      <h2>👤 Buat Username</h2>
+      <p>Username digunakan untuk login setiap kali membuka aplikasi.</p>
+      <div class="input-wrap">
+        <label>Username</label>
+        <input type="text" id="inputUsername" placeholder="Contoh: johan123" autocomplete="off"
+          oninput="this.value = this.value.replace(/\s/g,'').toLowerCase()">
+        <div class="hint">Tanpa spasi, huruf kecil & angka saja</div>
+      </div>
+      <button class="btn-setup" onclick="nextStep(1)">Lanjut →</button>
+    </div>
+
+    <!-- STEP 2: Password -->
+    <div id="step2" style="display:none;">
+      <h2>🔐 Buat Password</h2>
+      <p>Password minimal 6 karakter. Gunakan kombinasi huruf dan angka.</p>
+      <div class="input-wrap">
+        <label>Password</label>
+        <div class="password-wrap">
+          <input type="password" id="inputPassword" placeholder="Min. 6 karakter">
+          <button class="toggle-pass" onclick="togglePass('inputPassword', this)">👁️</button>
+        </div>
+      </div>
+      <div class="input-wrap">
+        <label>Konfirmasi Password</label>
+        <div class="password-wrap">
+          <input type="password" id="inputPasswordConfirm" placeholder="Ulangi password">
+          <button class="toggle-pass" onclick="togglePass('inputPasswordConfirm', this)">👁️</button>
+        </div>
+      </div>
+      <button class="btn-setup" onclick="nextStep(2)">Lanjut →</button>
+    </div>
+
+    <!-- STEP 3: Nama Lengkap -->
+    <div id="step3" style="display:none;">
+      <h2>📛 Nama Lengkap</h2>
+      <p>Nama lengkap digunakan sebagai kunci pemulihan jika kamu lupa username atau password.</p>
+      <div class="input-wrap">
+        <label>Nama Lengkap</label>
+        <input type="text" id="inputFullName" placeholder="Contoh: JohanMadaJM" autocomplete="off"
+          oninput="this.value = this.value.replace(/\s/g,'')">
+        <div class="hint hint-warn">⚠️ Ingat baik-baik! Ini satu-satunya kunci pemulihan akun.</div>
+      </div>
+      <button class="btn-setup" onclick="finishSetup()">✅ Selesai & Masuk</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let setupData = { username: '', password: '', fullName: '' };
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.innerText = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+function updateDots(step) {
+  [1,2,3].forEach(i => {
+    document.getElementById('dot'+i).classList.toggle('active', i === step);
+  });
+}
+
+function nextStep(current) {
+  document.getElementById('errorMsg').style.display = 'none';
+
+  if (current === 1) {
+    const username = document.getElementById('inputUsername').value.trim();
+    if (username.length < 3) return showError('Username minimal 3 karakter.');
+    if (!/^[a-z0-9_]+$/.test(username)) return showError('Username hanya huruf kecil, angka, dan underscore.');
+    setupData.username = username;
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+    updateDots(2);
+
+  } else if (current === 2) {
+    const pass  = document.getElementById('inputPassword').value;
+    const pass2 = document.getElementById('inputPasswordConfirm').value;
+    if (pass.length < 6) return showError('Password minimal 6 karakter.');
+    if (pass !== pass2)  return showError('Password tidak cocok.');
+    setupData.password = pass;
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'block';
+    updateDots(3);
+  }
+}
+
+function finishSetup() {
+  const fullName = document.getElementById('inputFullName').value.trim();
+  if (fullName.length < 3) return showError('Nama lengkap minimal 3 karakter.');
+  if (/\s/.test(fullName))  return showError('Nama lengkap tidak boleh mengandung spasi.');
+
+  saveAuth({
+    username: setupData.username,
+    password: simpleHash(setupData.password),
+    fullName: simpleHash(fullName.toLowerCase()),
+    displayName: setupData.username,
+  });
+
+  // Simpan nama ke settings
+  const settings = JSON.parse(localStorage.getItem('dompetku_settings') || '{}');
+  settings.userName = setupData.username;
+  localStorage.setItem('dompetku_settings', JSON.stringify(settings));
+
+  setLoggedIn();
+
+  // Animasi transition
+  document.body.style.transition = 'opacity 0.4s ease';
+  document.body.style.opacity = '0';
+  setTimeout(() => window.location.href = 'index.html', 400);
+}
+
+function togglePass(id, btn) {
+  const input = document.getElementById(id);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.innerText = '🙈';
+  } else {
+    input.type = 'password';
+    btn.innerText = '👁️';
+  }
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (document.getElementById('step1').style.display !== 'none') nextStep(1);
+  else if (document.getElementById('step2').style.display !== 'none') nextStep(2);
+  else finishSetup();
+});
+</script>
+</body>
+</html>
