@@ -35,19 +35,15 @@ function loadData() {
 function saveTransactions() {
   localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(appData.transactions));
 }
-
 function saveSavings() {
   localStorage.setItem(STORAGE_KEYS.SAVINGS_GOALS, JSON.stringify(appData.savingsGoals));
 }
-
 function saveLoans() {
   localStorage.setItem(STORAGE_KEYS.LOANS, JSON.stringify(appData.loans));
 }
-
 function saveSpendingLimits() {
   localStorage.setItem(STORAGE_KEYS.SPENDING_LIMITS, JSON.stringify(appData.spendingLimits));
 }
-
 function saveSettings() {
   localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(appData.settings));
 }
@@ -64,13 +60,11 @@ function addTransaction(transaction) {
 function updateTransaction(id, updatedTransaction) {
   const index = appData.transactions.findIndex(t => String(t.id) === String(id));
   if (index === -1) return false;
-
   appData.transactions[index] = {
     ...appData.transactions[index],
     ...updatedTransaction,
     amount: Number(updatedTransaction.amount) || 0
   };
-
   saveTransactions();
   return true;
 }
@@ -93,12 +87,7 @@ function addSavingsGoal(goal) {
 function updateSavingsGoal(id, updatedGoal) {
   const index = appData.savingsGoals.findIndex(g => String(g.id) === String(id));
   if (index === -1) return false;
-
-  appData.savingsGoals[index] = {
-    ...appData.savingsGoals[index],
-    ...updatedGoal
-  };
-
+  appData.savingsGoals[index] = { ...appData.savingsGoals[index], ...updatedGoal };
   saveSavings();
   return true;
 }
@@ -121,12 +110,7 @@ function addLoan(loan) {
 function updateLoan(id, updatedLoan) {
   const index = appData.loans.findIndex(l => String(l.id) === String(id));
   if (index === -1) return false;
-
-  appData.loans[index] = {
-    ...appData.loans[index],
-    ...updatedLoan
-  };
-
+  appData.loans[index] = { ...appData.loans[index], ...updatedLoan };
   saveLoans();
   return true;
 }
@@ -149,13 +133,11 @@ function addSpendingLimit(limit) {
 function updateSpendingLimit(id, updatedLimit) {
   const index = appData.spendingLimits.findIndex(l => String(l.id) === String(id));
   if (index === -1) return false;
-
   appData.spendingLimits[index] = {
     ...appData.spendingLimits[index],
     ...updatedLimit,
     amount: Number(updatedLimit.amount) || 0
   };
-
   saveSpendingLimits();
   return true;
 }
@@ -194,19 +176,35 @@ function formatCurrency(amount) {
 
 function getCategoryIcon(category) {
   const icons = {
-    makan: '🍔',
-    transport: '🚗',
-    belanja: '🛍️',
-    gaji: '💼',
-    usaha: '📈',
-    tagihan: '📄',
-    kesehatan: '🏥',
-    hiburan: '🎬',
-    pendidikan: '📚',
-    tabungan: '🎯',
-    lainnya: '📌'
+    // Pemasukan
+    gaji:      '💼',
+    usaha:     '📈',
+    investasi: '💹',
+    bonus:     '🎁',
+    freelance: '💻',
+    sewa:      '🏠',
+    hadiah:    '🎀',
+    // Pengeluaran
+    makan:       '🍔',
+    transport:   '🚗',
+    belanja:     '🛍️',
+    tagihan:     '📄',
+    kesehatan:   '🏥',
+    hiburan:     '🎬',
+    pendidikan:  '📚',
+    cicilan:     '💳',
+    pakaian:     '👗',
+    rumah:       '🏡',
+    komunikasi:  '📱',
+    sosial:      '🤝',
+    olahraga:    '⚽',
+    liburan:     '✈️',
+    asuransi:    '🛡️',
+    donasi:      '🕌',
+    tabungan:    '🎯',
+    // Umum
+    lainnya:     '📌'
   };
-
   return icons[category] || '📌';
 }
 
@@ -250,18 +248,12 @@ function getCategoryExpense(category, month = new Date().getMonth(), year = new 
 
 function resetAllData() {
   if (!confirm('Yakin ingin menghapus semua data?')) return;
-
   Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
-
   appData.transactions = [];
   appData.savingsGoals = [];
   appData.loans = [];
   appData.spendingLimits = [];
-  appData.settings = {
-    userName: 'Pengguna',
-    theme: 'dark'
-  };
-
+  appData.settings = { userName: 'Pengguna', theme: 'dark' };
   alert('Semua data berhasil dihapus.');
   location.reload();
 }
