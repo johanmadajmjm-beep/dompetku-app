@@ -287,10 +287,12 @@ function calcTotalBayar(debt) {
   if (!bunga || !jangka) return pokok;
 
   if (tipe === 'flat') {
-    const bungaPerBulan = (pokok * (bunga/100)) / 12;
+    // Bunga flat: bunga % adalah per bulan
+    const bungaPerBulan = pokok * (bunga / 100);
     return pokok + (bungaPerBulan * jangka);
   } else {
-    const r = (bunga/100) / 12;
+    // Bunga menurun: bunga % adalah per bulan
+    const r = bunga / 100;
     if (r === 0) return pokok;
     const cicilan = pokok * (r * Math.pow(1+r,jangka)) / (Math.pow(1+r,jangka)-1);
     return cicilan * jangka;
@@ -301,17 +303,35 @@ function updateDebtSummary() {
   const debts = getDebts();
   const fmt = v => 'Rp ' + Math.round(v).toLocaleString('id-ID');
 
-  // Total berutang sudah termasuk bunga
-  const totalOwed = debts
+  const totalOwedPokok = debts
+    .filter(d => d.debtType==='owed' && d.status!=='paid')
+    .reduce((s,d) => s + Number(d.amount||0), 0);
+  const totalOwedTotal = debts
     .filter(d => d.debtType==='owed' && d.status!=='paid')
     .reduce((s,d) => s + calcTotalBayar(d), 0);
 
-  const totalLent = debts
+  const totalLentPokok = debts
     .filter(d => d.debtType==='lent' && d.status!=='paid')
     .reduce((s,d) => s + Number(d.amount||0), 0);
+  const totalLentTotal = debts
+    .filter(d => d.debtType==='lent' && d.status!=='paid')
+    .reduce((s,d) => s + calcTotalBayar(d), 0);
 
-  document.getElementById('totalOwed').innerText = fmt(totalOwed);
-  document.getElementById('totalLent').innerText = fmt(totalLent);
+  const setHTML = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+
+  setHTML('totalOwed', `
+    <div style="font-size:10px;opacity:.5;font-weight:600;letter-spacing:.5px;margin-bottom:1px;">POKOK</div>
+    <div style="font-size:15px;font-weight:800;color:#ff4757;">${fmt(Math.round(totalOwedPokok))}</div>
+    <div style="font-size:10px;opacity:.5;font-weight:600;letter-spacing:.5px;margin-top:5px;margin-bottom:1px;">POKOK + BUNGA</div>
+    <div style="font-size:13px;font-weight:700;color:#ff6b81;">${fmt(Math.round(totalOwedTotal))}</div>
+  `);
+
+  setHTML('totalLent', `
+    <div style="font-size:10px;opacity:.5;font-weight:600;letter-spacing:.5px;margin-bottom:1px;">POKOK</div>
+    <div style="font-size:15px;font-weight:800;color:#00e87a;">${fmt(Math.round(totalLentPokok))}</div>
+    <div style="font-size:10px;opacity:.5;font-weight:600;letter-spacing:.5px;margin-top:5px;margin-bottom:1px;">POKOK + BUNGA</div>
+    <div style="font-size:13px;font-weight:700;color:#00cc66;">${fmt(Math.round(totalLentTotal))}</div>
+  `);
 }
 
 // ── MODAL ──
@@ -516,7 +536,7 @@ function showDebtDetail(id) {
     info += '<br>';
     if (tipe === 'flat') {
       // Bunga Flat: bunga dihitung dari pokok awal, tetap setiap bulan
-      const bungaPerBulan   = (pokok * (bunga / 100)) / 12;
+      const bungaPerBulan   = pokok * (bunga / 100);
       const cicilanPerBulan = (pokok / jangka) + bungaPerBulan;
       const totalBunga      = bungaPerBulan * jangka;
       const totalBayar      = pokok + totalBunga;
@@ -547,7 +567,7 @@ function showDebtDetail(id) {
 
     } else {
       // Bunga Menurun (Anuitas): bunga dihitung dari sisa pokok
-      const r = (bunga / 100) / 12; // bunga per bulan
+      const r = bunga / 100; // bunga % per bulan
       let cicilanPerBulan = 0;
       if (r === 0) {
         cicilanPerBulan = pokok / jangka;
