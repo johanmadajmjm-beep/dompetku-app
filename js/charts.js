@@ -261,3 +261,83 @@ function renderExpensePieChart() {
     }
   });
 }
+
+/* ── Bar chart per kategori ── */
+let expenseBarChart = null;
+let incomeBarChart  = null;
+
+function buildBarConfig(labels, values, color, labelName) {
+  return {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: labelName,
+        data: values,
+        backgroundColor: color,
+        borderRadius: 8,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      animation: { duration: 500 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: ctx => formatCurrency(ctx.raw) }
+        }
+      },
+      scales: {
+        y: {
+          ticks: { color: 'rgba(240,244,255,0.6)', font: { size: 11 }, callback: v => formatShort(v) },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        },
+        x: {
+          ticks: { color: 'rgba(240,244,255,0.7)', font: { size: 11 } },
+          grid: { display: false }
+        }
+      }
+    }
+  };
+}
+
+function renderExpenseBarChart() {
+  const canvas = document.getElementById('expenseBarChart');
+  if (!canvas) return;
+
+  const categoryMap = {};
+  appData.transactions.forEach(t => {
+    if (t.type === 'expense') {
+      const icon = getCategoryIcon(t.category);
+      const key  = icon + ' ' + t.category;
+      categoryMap[key] = (categoryMap[key] || 0) + Number(t.amount);
+    }
+  });
+
+  const labels = Object.keys(categoryMap);
+  const values = Object.values(categoryMap);
+  if (expenseBarChart) expenseBarChart.destroy();
+  expenseBarChart = new Chart(canvas.getContext('2d'),
+    buildBarConfig(labels, values, 'rgba(255,71,87,0.75)', 'Pengeluaran'));
+}
+
+function renderIncomeBarChart() {
+  const canvas = document.getElementById('incomeBarChart');
+  if (!canvas) return;
+
+  const categoryMap = {};
+  appData.transactions.forEach(t => {
+    if (t.type === 'income') {
+      const icon = getCategoryIcon(t.category);
+      const key  = icon + ' ' + t.category;
+      categoryMap[key] = (categoryMap[key] || 0) + Number(t.amount);
+    }
+  });
+
+  const labels = Object.keys(categoryMap);
+  const values = Object.values(categoryMap);
+  if (incomeBarChart) incomeBarChart.destroy();
+  incomeBarChart = new Chart(canvas.getContext('2d'),
+    buildBarConfig(labels, values, 'rgba(0,232,122,0.75)', 'Pemasukan'));
+}
