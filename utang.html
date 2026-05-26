@@ -2,7 +2,16 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <script src="js/auth.js"></script>
+  <script>
+var AUTH_KEY='ff_auth';
+function getAuth(){try{return JSON.parse(localStorage.getItem(AUTH_KEY)||'null');}catch(e){return null;}}
+function saveAuth(d){localStorage.setItem(AUTH_KEY,JSON.stringify(d));}
+function isFirstTime(){return getAuth()===null;}
+function isLoggedIn(){return sessionStorage.getItem('ff_logged_in')==='1';}
+function setLoggedIn(){sessionStorage.setItem('ff_logged_in','1');}
+function logout(){sessionStorage.removeItem('ff_logged_in');window.location.href='splash.html';}
+function simpleHash(s){var h=0;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);h=((h<<5)-h)+c;h=h&h;}return h.toString(36);}
+</script>
   <script>if(!isFirstTime()&&!isLoggedIn())window.location.replace("splash.html");</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>FinancialFreedom</title>
@@ -266,7 +275,8 @@ function renderDebtList(list, container, type) {
         <div style="display:flex;justify-content:space-between;align-items:flex-start;" onclick="showDebtDetail(${d.id})">
           <div style="flex:1;padding-right:8px;">
             <div style="font-weight:bold;font-size:15px;">${d.name}</div>
-            <div style="font-size:11px;opacity:.55;margin-top:3px;">${interestInfo}${durationInfo}</div>
+            <div style="font-size:12px;color:rgba(240,244,255,0.45);margin-top:2px;font-weight:600;">${fmt(Number(d.originalAmount||d.amount||0))}</div>
+            <div style="font-size:11px;opacity:.55;margin-top:2px;">${interestInfo}${durationInfo}</div>
             ${d.startDate ? `<div style="font-size:11px;opacity:.55;">Mulai: ${new Date(d.startDate).toLocaleDateString('id-ID')}</div>` : ''}
           </div>
           <div style="text-align:right;">
@@ -400,7 +410,7 @@ function saveDebt() {
     const idx = debts.findIndex(d => String(d.id) === String(id));
     if (idx !== -1) debts[idx] = { ...debts[idx], ...data };
   } else {
-    debts.push({ id: Date.now(), ...data });
+    debts.push({ id: Date.now(), originalAmount: amount, ...data });
   }
 
   saveDebts(debts);
