@@ -25,14 +25,39 @@ function getFilteredTrendData(mode) {
     }
 
   } else if (mode === 'month') {
-    // 6 bulan terakhir, label: "Jan-25", "Feb-26", dst
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const mn = d.getMonth();
-      const yr = String(d.getFullYear()).slice(2);
-      labels.push(monthNames[mn] + '-' + yr);
-      incomeData.push(getMonthlyTotal('income', mn, d.getFullYear()));
-      expenseData.push(getMonthlyTotal('expense', mn, d.getFullYear()));
+    // Cari bulan paling awal yang ada transaksi
+    if (appData.transactions.length === 0) {
+      // Kalau tidak ada data, tampilkan 3 bulan terakhir
+      for (let i = 2; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const mn = d.getMonth();
+        const yr = String(d.getFullYear()).slice(2);
+        labels.push(monthNames[mn] + '-' + yr);
+        incomeData.push(0);
+        expenseData.push(0);
+      }
+    } else {
+      // Cari tanggal transaksi paling awal
+      const allDates = appData.transactions.map(t => new Date(t.date));
+      const earliest = new Date(Math.min(...allDates));
+      const earliestMonth = new Date(earliest.getFullYear(), earliest.getMonth(), 1);
+      const currentMonth  = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      // Hitung selisih bulan
+      let diffMonth = (currentMonth.getFullYear() - earliestMonth.getFullYear()) * 12
+                    + (currentMonth.getMonth() - earliestMonth.getMonth());
+
+      // Batasi maksimal 12 bulan
+      if (diffMonth > 11) diffMonth = 11;
+
+      for (let i = diffMonth; i >= 0; i--) {
+        const d  = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const mn = d.getMonth();
+        const yr = String(d.getFullYear()).slice(2);
+        labels.push(monthNames[mn] + '-' + yr);
+        incomeData.push(getMonthlyTotal('income',  mn, d.getFullYear()));
+        expenseData.push(getMonthlyTotal('expense', mn, d.getFullYear()));
+      }
     }
 
   } else if (mode === 'week') {
