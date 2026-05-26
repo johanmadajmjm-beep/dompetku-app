@@ -66,6 +66,20 @@ function updateDashboardStats() {
   set('totalLoan',     formatCurrency(totalLoan));
   set('totalAset',     formatCurrency(totalAset));
   set('totalPiutang',  formatCurrency(totalPiutang));
+
+  // Progress bar rasio pengeluaran
+  const ratio = monthIncome > 0 ? Math.min((monthExpense / monthIncome) * 100, 100) : 0;
+  const barEl = document.getElementById('balanceProgressBar');
+  const ratioEl = document.getElementById('balanceRatio');
+  if (barEl) {
+    barEl.style.width = ratio + '%';
+    barEl.style.background = ratio > 80
+      ? 'linear-gradient(90deg,#ff4757,#ff6b81)'
+      : ratio > 50
+      ? 'linear-gradient(90deg,#ffa502,#ffcc00)'
+      : 'linear-gradient(90deg,#00e87a,#00cc66)';
+  }
+  if (ratioEl) ratioEl.innerText = ratio.toFixed(0) + '%';
 }
 
 function renderDashboardInsights() {
