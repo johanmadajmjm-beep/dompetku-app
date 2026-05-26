@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>FinancialFreedom</title>
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .type-btn.active.income-active {
+      background: #00e87a !important;
+      color: #070c18 !important;
+      border-color: #00e87a !important;
+      box-shadow: 0 4px 16px rgba(0,232,122,0.3) !important;
+    }
+    .type-btn.active.expense-active {
+      background: #ff4757 !important;
+      color: white !important;
+      border-color: #ff4757 !important;
+      box-shadow: 0 4px 16px rgba(255,71,87,0.3) !important;
+    }
+  </style>
 </head>
 <body>
 <div class="app-container">
@@ -21,8 +35,8 @@
     <div class="input-group">
       <label>Tipe Transaksi</label>
       <div class="type-selector">
-        <button class="type-btn" onclick="setType('income')">💰 Pemasukan</button>
-        <button class="type-btn active" onclick="setType('expense')">💸 Pengeluaran</button>
+        <button class="type-btn income-active" id="btnIncome" onclick="setType('income')">💰 Pemasukan</button>
+        <button class="type-btn expense-active" id="btnExpense" onclick="setType('expense')">💸 Pengeluaran</button>
       </div>
     </div>
 
@@ -142,5 +156,25 @@
 
 <script src="js/storage.js"></script>
 <script src="js/transaksi.js"></script>
+<script>
+// Override setType untuk update warna tombol
+const _origSetType = typeof setType === 'function' ? setType : null;
+document.addEventListener('DOMContentLoaded', () => {
+  const origSetType = window.setType;
+  window.setType = function(type) {
+    if (origSetType) origSetType(type);
+    const btnIncome  = document.getElementById('btnIncome');
+    const btnExpense = document.getElementById('btnExpense');
+    if (!btnIncome || !btnExpense) return;
+    if (type === 'income') {
+      btnIncome.classList.add('active', 'income-active');
+      btnExpense.classList.remove('active', 'expense-active');
+    } else {
+      btnExpense.classList.add('active', 'expense-active');
+      btnIncome.classList.remove('active', 'income-active');
+    }
+  };
+});
+</script>
 </body>
 </html>
