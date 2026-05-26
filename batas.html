@@ -2,7 +2,16 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <script src="js/auth.js"></script>
+  <script>
+var AUTH_KEY='ff_auth';
+function getAuth(){try{return JSON.parse(localStorage.getItem(AUTH_KEY)||'null');}catch(e){return null;}}
+function saveAuth(d){localStorage.setItem(AUTH_KEY,JSON.stringify(d));}
+function isFirstTime(){return getAuth()===null;}
+function isLoggedIn(){return sessionStorage.getItem('ff_logged_in')==='1';}
+function setLoggedIn(){sessionStorage.setItem('ff_logged_in','1');}
+function logout(){sessionStorage.removeItem('ff_logged_in');window.location.href='splash.html';}
+function simpleHash(s){var h=0;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);h=((h<<5)-h)+c;h=h&h;}return h.toString(36);}
+</script>
   <script>if(!isFirstTime()&&!isLoggedIn())window.location.replace("splash.html");</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>FinancialFreedom</title>
@@ -35,6 +44,16 @@
         <option value="kesehatan">🏥 Kesehatan</option>
         <option value="hiburan">🎬 Hiburan</option>
         <option value="pendidikan">📚 Pendidikan</option>
+        <option value="cicilan">💳 Cicilan / Utang</option>
+        <option value="pakaian">👗 Pakaian & Perawatan</option>
+        <option value="rumah">🏡 Rumah Tangga</option>
+        <option value="komunikasi">📱 Komunikasi</option>
+        <option value="sosial">🤝 Sosial</option>
+        <option value="olahraga">⚽ Olahraga & Hobi</option>
+        <option value="liburan">✈️ Perjalanan / Liburan</option>
+        <option value="asuransi">🛡️ Asuransi</option>
+        <option value="donasi">🕌 Donasi / Zakat</option>
+        <option value="tabungan">🎯 Tabungan</option>
         <option value="lainnya">📌 Lainnya</option>
       </select>
       <input type="text" id="limitAmount" class="premium-input money-input" placeholder="Contoh: 1.500.000">
