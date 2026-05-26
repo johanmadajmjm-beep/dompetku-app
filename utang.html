@@ -247,6 +247,13 @@ function renderDebtList(list, container, type) {
     const interestInfo = d.interest ? ` · Bunga ${d.interest}% (${d.interestType||'flat'})` : '';
     const durationInfo = d.duration ? ` · ${d.duration} bulan` : '';
 
+    // Hitung total bunga & total bayar
+    const totalBayar = calcTotalBayar(d);
+    const pokok      = Number(d.amount || 0);
+    const totalBunga = totalBayar - pokok;
+    const payments   = d.payments || [];
+    const sudahBayar = payments.reduce((s,p) => s + Number(p.amount||0), 0);
+
     return `
       <div class="debt-item ${d.status}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;" onclick="showDebtDetail(${d.id})">
@@ -254,13 +261,14 @@ function renderDebtList(list, container, type) {
             <div style="font-weight:bold;font-size:15px;">${d.name}</div>
             <div style="font-size:11px;opacity:.55;margin-top:3px;">${interestInfo}${durationInfo}</div>
             ${d.startDate ? `<div style="font-size:11px;opacity:.55;">Mulai: ${new Date(d.startDate).toLocaleDateString('id-ID')}</div>` : ''}
-            ${d.note ? `<div style="font-size:12px;opacity:.6;margin-top:2px;">📝 ${d.note}</div>` : ''}
           </div>
           <div style="text-align:right;">
-            <div style="font-weight:bold;color:${amountColor};font-size:15px;">${amountPrefix}${fmt(d.amount)}</div>
+            <div style="font-weight:bold;color:${amountColor};font-size:15px;">${amountPrefix}${fmt(pokok)}</div>
+            ${d.interest && d.duration ? `<div style="font-size:11px;opacity:.55;margin-top:2px;">Total: ${fmt(Math.round(totalBayar))}</div>` : ''}
             <div style="font-size:11px;color:${statusColor};margin-top:4px;">${statusLabel}</div>
           </div>
         </div>
+
         ${d.status !== 'paid' ? `
         <div style="display:flex;justify-content:flex-end;margin-top:10px;">
           <button onclick="openBayarModal(${d.id})" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(0,232,122,0.4);background:rgba(0,232,122,0.1);color:#00e87a;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">💳 Bayar</button>
