@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <script src="js/auth.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>FinancialFreedom</title>
   <link rel="stylesheet" href="css/styles.css">
@@ -377,9 +378,167 @@ timer = setInterval(nextQuote, INTERVAL);
 
 function goToApp() {
   clearInterval(timer);
+  if (isFirstTime()) {
+    // Pertama kali install → setup password
+    document.body.style.transition = 'opacity 0.4s ease';
+    document.body.style.opacity = '0';
+    setTimeout(() => { window.location.href = 'setup.html'; }, 400);
+  } else {
+    // Sudah punya akun → tampilkan form login
+    showLoginForm();
+  }
+}
+
+function showLoginForm() {
+  document.getElementById('loginModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('loginUsername').focus(), 300);
+}
+
+function doLogin() {
+  const auth = getAuth();
+  const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+  const password = document.getElementById('loginPassword').value;
+
+  if (!username || !password) {
+    showLoginError('Isi username dan password.');
+    return;
+  }
+
+  if (username !== auth.username || simpleHash(password) !== auth.password) {
+    showLoginError('Username atau password salah.');
+    // Shake effect
+    document.querySelector('.login-card').classList.add('shake');
+    setTimeout(() => document.querySelector('.login-card').classList.remove('shake'), 500);
+    return;
+  }
+
+  setLoggedIn();
   document.body.style.transition = 'opacity 0.4s ease';
   document.body.style.opacity = '0';
   setTimeout(() => { window.location.href = 'index.html'; }, 400);
+}
+
+function showForgot() {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('forgotForm').style.display = 'block';
+}
+
+function doForgot() {
+  const auth = getAuth();
+  const fullName = document.getElementById('forgotFullName').value.trim();
+  if (!fullName) { showLoginError('Masukkan nama lengkap.'); return; }
+
+  if (simpleHash(fullName.toLowerCase()) !== auth.fullName) {
+    showLoginError('Nama lengkap tidak sesuai.');
+    return;
+  }
+
+  // Reset ke setup
+  document.getElementById('loginModal').style.display = 'none';
+  localStorage.removeItem('ff_auth');
+  document.body.style.transition = 'opacity 0.4s ease';
+  document.body.style.opacity = '0';
+  setTimeout(() => { window.location.href = 'setup.html'; }, 400);
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.innerText = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+function backToLogin() {
+  document.getElementById('forgotForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+}
+
+// Check if already logged in this session
+if (!isFirstTime() && isLoggedIn()) {
+  // Sudah login di session ini → langsung ke beranda
+  window.location.href = 'index.html';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const modal = document.getElementById('loginModal');
+  if (!modal || modal.style.display === 'none') return;
+  if (document.getElementById('forgotForm').style.display !== 'none') doForgot();
+  else doLogin();
+});
+</script>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:3000;align-items:flex-end;justify-content:center;backdrop-filter:blur(8px);">
+  <div class="login-card" style="width:100%;max-width:480px;background:#0d1425;border-radius:24px 24px 0 0;border-top:1px solid rgba(255,255,255,0.1);padding:8px 20px 40px;animation:slideUp 0.3s cubic-bezier(0.32,0.72,0,1);">
+    <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:12px auto 20px;"></div>
+
+    <div id="loginError" style="display:none;background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#ff4757;margin-bottom:14px;"></div>
+
+    <!-- Form Login -->
+    <div id="loginForm">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-size:24px;margin-bottom:6px;">🔐</div>
+        <div style="font-size:16px;font-weight:700;color:#fff;">Selamat Datang Kembali</div>
+        <div style="font-size:12px;color:rgba(240,244,255,0.5);margin-top:2px;">Masuk ke FinancialFreedom</div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(240,244,255,0.5);margin-bottom:6px;">Username</div>
+        <input type="text" id="loginUsername" placeholder="Username kamu" autocomplete="off"
+          style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#f0f4ff;font-size:15px;font-family:inherit;outline:none;"
+          oninput="this.value=this.value.replace(/\s/g,'').toLowerCase()">
+      </div>
+      <div style="margin-bottom:6px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(240,244,255,0.5);margin-bottom:6px;">Password</div>
+        <div style="position:relative;">
+          <input type="password" id="loginPassword" placeholder="Password kamu"
+            style="width:100%;padding:12px 44px 12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#f0f4ff;font-size:15px;font-family:inherit;outline:none;">
+          <button onclick="toggleLoginPass()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(240,244,255,0.4);cursor:pointer;font-size:16px;" id="togglePassBtn">👁️</button>
+        </div>
+      </div>
+      <div style="text-align:right;margin-bottom:16px;">
+        <button onclick="showForgot()" style="background:none;border:none;color:rgba(0,232,122,0.7);font-size:12px;cursor:pointer;font-family:inherit;">Lupa password?</button>
+      </div>
+      <button onclick="doLogin()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#00e87a;color:#070c18;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 20px rgba(0,232,122,0.3);">Masuk</button>
+    </div>
+
+    <!-- Form Lupa Password -->
+    <div id="forgotForm" style="display:none;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-size:24px;margin-bottom:6px;">🔑</div>
+        <div style="font-size:16px;font-weight:700;color:#fff;">Pemulihan Akun</div>
+        <div style="font-size:12px;color:rgba(240,244,255,0.5);margin-top:2px;">Masukkan nama lengkap untuk mereset akun</div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(240,244,255,0.5);margin-bottom:6px;">Nama Lengkap</div>
+        <input type="text" id="forgotFullName" placeholder="Nama lengkap tanpa spasi" autocomplete="off"
+          style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#f0f4ff;font-size:15px;font-family:inherit;outline:none;"
+          oninput="this.value=this.value.replace(/\s/g,'')">
+        <div style="font-size:10px;color:rgba(255,165,0,0.6);margin-top:4px;">⚠️ Akun akan direset, data tidak terhapus</div>
+      </div>
+      <button onclick="doForgot()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#ffa502;color:#070c18;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:10px;">Reset Akun</button>
+      <button onclick="backToLogin()" style="width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(240,244,255,0.7);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;">← Kembali Login</button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+.shake { animation: shake 0.4s ease; }
+</style>
+
+<script>
+function toggleLoginPass() {
+  const input = document.getElementById('loginPassword');
+  const btn   = document.getElementById('togglePassBtn');
+  if (input.type === 'password') { input.type = 'text'; btn.innerText = '🙈'; }
+  else { input.type = 'password'; btn.innerText = '👁️'; }
 }
 </script>
 </body>
