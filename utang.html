@@ -152,7 +152,10 @@ function simpleHash(s){var h=0;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i)
 <div class="modal" id="debtDetailModal" onclick="handleDetailModalOutside(event)">
   <div class="modal-content glass">
     <div class="modal-handle"></div>
-    <h3 id="detailDebtName" style="margin-bottom:4px;"></h3>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+      <h3 id="detailDebtName" style="margin:0;"></h3>
+      <div id="detailOriginalAmount" style="font-size:12px;font-weight:700;color:rgba(240,244,255,0.4);text-align:right;padding-top:2px;"></div>
+    </div>
     <div id="detailDebtType" style="font-size:12px;opacity:.6;margin-bottom:16px;"></div>
     <div id="detailDebtAmount" style="font-size:26px;font-weight:bold;margin-bottom:8px;"></div>
     <div id="detailDebtInfo" style="font-size:13px;opacity:.7;line-height:1.8;margin-bottom:16px;"></div>
@@ -263,25 +266,26 @@ function renderDebtList(list, container, type) {
     const interestInfo = d.interest ? ` · Bunga ${d.interest}%/${d.interestPeriod||'bln'} (${d.interestType||'flat'})` : '';
     const durationInfo = d.duration ? ` · ${d.duration} bulan` : '';
 
-    // Hitung total bunga & total bayar
-    const totalBayar = calcTotalBayar(d);
-    const pokok      = Number(d.amount || 0);
-    const totalBunga = totalBayar - pokok;
-    const payments   = d.payments || [];
-    const sudahBayar = payments.reduce((s,p) => s + Number(p.amount||0), 0);
+    // Hitung 3 angka
+    const payments    = d.payments || [];
+    const sudahBayar  = payments.reduce((s,p) => s + Number(p.amount||0), 0);
+    const pokTersisa  = Number(d.amount || 0);
+    const originalAmt = Number(d.originalAmount || (pokTersisa + sudahBayar));
+    const totalKewajiban = calcTotalBayar({...d, amount: originalAmt});
+    const totalTersisa   = Math.max(0, Math.round(totalKewajiban - sudahBayar));
 
     return `
       <div class="debt-item ${d.status}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;" onclick="showDebtDetail(${d.id})">
           <div style="flex:1;padding-right:8px;">
             <div style="font-weight:bold;font-size:15px;">${d.name}</div>
-            <div style="font-size:12px;color:rgba(240,244,255,0.45);margin-top:2px;font-weight:600;">${fmt(Number(d.originalAmount||d.amount||0))}</div>
+            <div style="font-size:12px;color:rgba(240,244,255,0.35);margin-top:2px;font-weight:600;">Pinjaman: ${fmt(originalAmt)}</div>
             <div style="font-size:11px;opacity:.55;margin-top:2px;">${interestInfo}${durationInfo}</div>
             ${d.startDate ? `<div style="font-size:11px;opacity:.55;">Mulai: ${new Date(d.startDate).toLocaleDateString('id-ID')}</div>` : ''}
           </div>
           <div style="text-align:right;">
-            <div style="font-weight:bold;color:${amountColor};font-size:15px;">${amountPrefix}${fmt(pokok)}</div>
-            ${d.interest && d.duration ? `<div style="font-size:11px;opacity:.55;margin-top:2px;">Total: ${fmt(Math.round(totalBayar))}</div>` : ''}
+            <div style="font-weight:bold;color:${amountColor};font-size:15px;">${amountPrefix}${fmt(pokTersisa)}</div>
+            ${d.interest && d.duration ? `<div style="font-size:11px;opacity:.55;margin-top:2px;">+Bunga: ${fmt(totalTersisa)}</div>` : ''}
             <div style="font-size:11px;color:${statusColor};margin-top:4px;">${statusLabel}</div>
           </div>
         </div>
@@ -517,6 +521,12 @@ function showDebtDetail(id) {
 
   document.getElementById('detailDebtName').innerText = debt.name;
   document.getElementById('detailDebtType').innerText = typeLabel + ' ' + debt.name;
+
+  // Angka statis pinjaman awal
+  const payments_d    = debt.payments || [];
+  const sudahBayar_d  = payments_d.reduce((s,p) => s + Number(p.amount||0), 0);
+  const originalAmt_d = Number(debt.originalAmount || (Number(debt.amount||0) + sudahBayar_d));
+  document.getElementById('detailOriginalAmount').innerText = 'Pinjaman awal: ' + fmt(originalAmt_d);
   document.getElementById('detailDebtAmount').innerText = fmt(debt.amount);
   document.getElementById('detailDebtAmount').style.color = amountColor;
 
