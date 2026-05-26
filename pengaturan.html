@@ -115,8 +115,27 @@
       </div>
     </div>
 
-    <div style="font-weight:bold;margin-bottom:10px;">Transaksi Terakhir</div>
-    <div id="rptTransactions"></div>
+    <div class="report-section">
+      <div class="report-row">
+        <span style="opacity:.7;">Total Tabungan</span>
+        <strong class="positive" id="rptSavings">Rp 0</strong>
+      </div>
+      <div class="report-row">
+        <span style="opacity:.7;">Total Aset</span>
+        <strong class="positive" id="rptAset">Rp 0</strong>
+      </div>
+      <div class="report-row">
+        <span style="opacity:.7;">Total Utang</span>
+        <strong class="negative" id="rptUtang">Rp 0</strong>
+      </div>
+      <div class="report-row">
+        <span style="opacity:.7;">Total Piutang</span>
+        <strong class="positive" id="rptPiutang">Rp 0</strong>
+      </div>
+    </div>
+
+    <div style="font-weight:700;font-size:13px;margin-bottom:8px;">💡 Insight</div>
+    <div id="rptInsights"></div>
 
     <button class="modal-btn cancel" style="margin-top:16px;" onclick="closeReportModal()">Tutup</button>
     <button class="modal-btn edit" onclick="window.print()">🖨️ Export / Print</button>
@@ -127,33 +146,48 @@
 <script src="js/app.js"></script>
 <script>
 function showReportModal() {
-  const now = new Date();
-  const income = getMonthlyTotal('income', now.getMonth(), now.getFullYear());
+  const now     = new Date();
+  const income  = getMonthlyTotal('income',  now.getMonth(), now.getFullYear());
   const expense = getMonthlyTotal('expense', now.getMonth(), now.getFullYear());
   const balance = getTotalBalance();
-  const diff = income - expense;
+  const diff    = income - expense;
+  const savings = appData.savingsGoals.reduce((s,g) => s + Number(g.savedAmount||0), 0);
+  const debts   = JSON.parse(localStorage.getItem('dompetku_debts')||'[]');
+  const totalUtang   = debts.filter(d=>d.debtType==='owed'&&d.status!=='paid').reduce((s,d)=>s+Number(d.amount||0),0);
+  const totalPiutang = debts.filter(d=>d.debtType==='lent'&&d.status!=='paid').reduce((s,d)=>s+Number(d.amount||0),0);
+  const totalAset = balance + savings;
+  const ratio = income > 0 ? ((expense/income)*100).toFixed(0) : 0;
+  const monthName = now.toLocaleDateString('id-ID', { month:'long', year:'numeric' });
 
-  document.getElementById('reportDate').innerText = 'Tanggal cetak: ' + now.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
-  document.getElementById('rptBalance').innerText = formatCurrency(balance);
-  document.getElementById('rptIncome').innerText = formatCurrency(income);
-  document.getElementById('rptExpense').innerText = formatCurrency(expense);
+  const insights = [];
+  if (income === 0 && expense === 0) {
+    insights.push('Belum ada transaksi bulan ini.');
+  } else {
+    if (expense > income) insights.push('⚠️ Pengeluaran melebihi pemasukan. Perlu evaluasi segera.');
+    else if (ratio < 50)  insights.push('🎉 Keuangan sehat! Pengeluaran hanya ' + ratio + '% dari pemasukan.');
+    else                  insights.push('💡 Pengeluaran ' + ratio + '% dari pemasukan bulan ini.');
+    if (totalUtang > 0)   insights.push('💸 Utang aktif ' + formatCurrency(totalUtang) + '. Prioritaskan pelunasan.');
+    if (totalPiutang > 0) insights.push('🤝 Piutang ' + formatCurrency(totalPiutang) + ' belum dikembalikan.');
+    if (savings > 0)      insights.push('🎯 Tabungan terkumpul ' + formatCurrency(savings) + '. Terus pertahankan!');
+    if (balance < 0)      insights.push('🔴 Total saldo minus. Segera kurangi pengeluaran.');
+  }
+
+  document.getElementById('reportDate').innerText   = 'Periode: ' + monthName;
+  document.getElementById('rptBalance').innerText   = formatCurrency(balance);
+  document.getElementById('rptIncome').innerText    = formatCurrency(income);
+  document.getElementById('rptExpense').innerText   = formatCurrency(expense);
+  document.getElementById('rptSavings').innerText   = formatCurrency(savings);
+  document.getElementById('rptAset').innerText      = formatCurrency(totalAset);
+  document.getElementById('rptUtang').innerText     = formatCurrency(totalUtang);
+  document.getElementById('rptPiutang').innerText   = formatCurrency(totalPiutang);
 
   const diffEl = document.getElementById('rptDiff');
   diffEl.innerText = (diff >= 0 ? '+' : '') + formatCurrency(diff);
   diffEl.className = diff >= 0 ? 'positive' : 'negative';
 
-  const txList = appData.transactions.slice(0, 15);
-  document.getElementById('rptTransactions').innerHTML = txList.length === 0
-    ? '<div style="opacity:.6;font-size:13px;">Belum ada transaksi.</div>'
-    : txList.map(t => `
-        <div class="report-tx-item">
-          <span style="opacity:.6;">${new Date(t.date).toLocaleDateString('id-ID')}</span>
-          &nbsp;${getCategoryIcon(t.category)} ${t.category}
-          &nbsp;<strong class="${t.type === 'income' ? 'positive' : 'negative'}">
-            ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
-          </strong>
-        </div>
-      `).join('');
+  document.getElementById('rptInsights').innerHTML = insights
+    .map(i => '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;line-height:1.5;">' + i + '</div>')
+    .join('');
 
   document.getElementById('reportModal').classList.add('show');
   document.getElementById('reportModal').style.display = 'flex';
@@ -166,9 +200,7 @@ function closeReportModal() {
 }
 
 function handleModalOutsideClick(e) {
-  if (e.target === document.getElementById('reportModal')) {
-    closeReportModal();
-  }
+  if (e.target === document.getElementById('reportModal')) closeReportModal();
 }
 </script>
 </body>
