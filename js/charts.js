@@ -226,12 +226,12 @@ function drawTrendChart(mode) {
   trendChart = new Chart(ctx, buildTrendChartConfig(data));
 }
 
-function switchTrendMode(mode) {
+window.switchTrendMode = function(mode) {
   document.querySelectorAll('.slicer-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
   drawTrendChart(mode);
-}
+};
 
 /* ── Pie chart ── */
 function renderExpensePieChart() {
