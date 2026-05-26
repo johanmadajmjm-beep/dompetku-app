@@ -59,39 +59,7 @@ function simpleHash(s){var h=0;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i)
     <div class="input-group">
       <label>Kategori</label>
       <select id="category" class="premium-select">
-        <optgroup label="── Pilih Tipe Transaksi Dulu ──" id="catPlaceholder">
-          <option value="">-- Pilih kategori --</option>
-        </optgroup>
-        <optgroup label="💰 Pemasukan" id="catIncome" style="display:none;">
-          <option value="gaji">💼 Gaji</option>
-          <option value="usaha">📈 Usaha</option>
-          <option value="investasi">💹 Investasi / Dividen</option>
-          <option value="bonus">🎁 Bonus / THR</option>
-          <option value="freelance">💻 Freelance</option>
-          <option value="sewa">🏠 Sewa / Passive Income</option>
-          <option value="hadiah">🎀 Hadiah / Hibah</option>
-          <option value="lainnya">📌 Lainnya</option>
-        </optgroup>
-        <optgroup label="💸 Pengeluaran" id="catExpense" style="display:none;">
-          <option value="makan">🍔 Makan</option>
-          <option value="transport">🚗 Transport</option>
-          <option value="belanja">🛍️ Belanja</option>
-          <option value="tagihan">📄 Tagihan</option>
-          <option value="kesehatan">🏥 Kesehatan</option>
-          <option value="hiburan">🎬 Hiburan</option>
-          <option value="pendidikan">📚 Pendidikan</option>
-          <option value="cicilan">💳 Cicilan / Utang</option>
-          <option value="pakaian">👗 Pakaian & Perawatan</option>
-          <option value="rumah">🏡 Rumah Tangga</option>
-          <option value="komunikasi">📱 Komunikasi</option>
-          <option value="sosial">🤝 Sosial</option>
-          <option value="olahraga">⚽ Olahraga & Hobi</option>
-          <option value="liburan">✈️ Perjalanan / Liburan</option>
-          <option value="asuransi">🛡️ Asuransi</option>
-          <option value="donasi">🕌 Donasi / Zakat</option>
-          <option value="tabungan">🎯 Tabungan / Investasi</option>
-          <option value="lainnya">📌 Lainnya</option>
-        </optgroup>
+        <option value="">-- Pilih tipe transaksi dulu --</option>
       </select>
     </div>
 
@@ -226,18 +194,27 @@ document.addEventListener('DOMContentLoaded', () => {
       btnExpense.classList.add('active', 'expense-active');
       btnIncome.classList.remove('active', 'income-active');
     }
-    // Switch kategori sesuai tipe
-    const catIncome  = document.getElementById('catIncome');
-    const catExpense = document.getElementById('catExpense');
-    const catPlaceholder = document.getElementById('catPlaceholder');
-    const catSelect  = document.getElementById('category');
-    if (catIncome && catExpense) {
-      catIncome.style.display  = type === 'income'  ? '' : 'none';
-      catExpense.style.display = type === 'expense' ? '' : 'none';
-      if (catPlaceholder) catPlaceholder.style.display = 'none';
-      // Auto-pilih opsi pertama sesuai tipe
-      catSelect.value = type === 'income' ? 'gaji' : 'makan';
-    }
+    // Rebuild kategori sesuai tipe (compatible semua browser HP)
+    const catSelect = document.getElementById('category');
+    if (!catSelect) return;
+    const incomeOptions = [
+      ['gaji','💼 Gaji'],['usaha','📈 Usaha'],['investasi','💹 Investasi / Dividen'],
+      ['bonus','🎁 Bonus / THR'],['freelance','💻 Freelance'],
+      ['sewa','🏠 Sewa / Passive Income'],['hadiah','🎀 Hadiah / Hibah'],['lainnya','📌 Lainnya']
+    ];
+    const expenseOptions = [
+      ['makan','🍔 Makan'],['transport','🚗 Transport'],['belanja','🛍️ Belanja'],
+      ['tagihan','📄 Tagihan'],['kesehatan','🏥 Kesehatan'],['hiburan','🎬 Hiburan'],
+      ['pendidikan','📚 Pendidikan'],['cicilan','💳 Cicilan / Utang'],
+      ['pakaian','👗 Pakaian & Perawatan'],['rumah','🏡 Rumah Tangga'],
+      ['komunikasi','📱 Komunikasi'],['sosial','🤝 Sosial'],
+      ['olahraga','⚽ Olahraga & Hobi'],['liburan','✈️ Perjalanan / Liburan'],
+      ['asuransi','🛡️ Asuransi'],['donasi','🕌 Donasi / Zakat'],
+      ['tabungan','🎯 Tabungan / Investasi'],['lainnya','📌 Lainnya']
+    ];
+    const opts = type === 'income' ? incomeOptions : expenseOptions;
+    catSelect.innerHTML = opts.map(o => `<option value="${o[0]}">${o[1]}</option>`).join('');
+    catSelect.value = opts[0][0];
   };
 });
 </script>
