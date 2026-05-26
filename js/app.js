@@ -43,9 +43,20 @@ function updateDashboardStats() {
   const monthIncome   = getMonthlyTotal('income',  now.getMonth(), now.getFullYear());
   const monthExpense  = getMonthlyTotal('expense', now.getMonth(), now.getFullYear());
   const totalSavings  = appData.savingsGoals.reduce((s, g) => s + Number(g.savedAmount || 0), 0);
-  const totalLoan     = appData.loans
-    .filter(l => l.status === 'active')
-    .reduce((s, l) => s + Number(l.amount || 0), 0);
+
+  // Ambil dari dompetku_debts (halaman utang)
+  const debts = JSON.parse(localStorage.getItem('dompetku_debts') || '[]');
+  const totalLoan = debts
+    .filter(d => d.debtType === 'owed' && d.status !== 'paid')
+    .reduce((s, d) => s + Number(d.amount || 0), 0);
+
+  // Piutang = uang yang kita pinjamkan ke orang lain, belum lunas
+  const totalPiutang = debts
+    .filter(d => d.debtType === 'lent' && d.status !== 'paid')
+    .reduce((s, d) => s + Number(d.amount || 0), 0);
+
+  // Total Aset = Total Saldo + Total Tabungan
+  const totalAset = totalBalance + totalSavings;
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
   set('totalBalance',  formatCurrency(totalBalance));
@@ -53,6 +64,8 @@ function updateDashboardStats() {
   set('monthExpense',  formatCurrency(monthExpense));
   set('totalSavings',  formatCurrency(totalSavings));
   set('totalLoan',     formatCurrency(totalLoan));
+  set('totalAset',     formatCurrency(totalAset));
+  set('totalPiutang',  formatCurrency(totalPiutang));
 }
 
 function renderDashboardInsights() {
