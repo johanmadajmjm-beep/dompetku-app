@@ -147,6 +147,31 @@
   </div>
 </div>
 
+<!-- MODAL BAYAR -->
+<div class="modal" id="bayarModal" onclick="handleBayarModalOutside(event)">
+  <div class="modal-content glass">
+    <div class="modal-handle"></div>
+    <h3 style="margin-bottom:4px;">💳 Pembayaran</h3>
+    <div id="bayarDebtName" style="font-size:13px;opacity:.6;margin-bottom:16px;"></div>
+
+    <input type="hidden" id="bayarDebtId">
+
+    <div class="input-group">
+      <label>Sisa Utang Saat Ini</label>
+      <div id="bayarSisaUtang" style="font-size:18px;font-weight:800;color:#ff4757;margin-bottom:4px;">Rp 0</div>
+    </div>
+
+    <div class="input-group">
+      <label>Nominal Pembayaran</label>
+      <input type="text" id="bayarNominal" class="premium-input" placeholder="Contoh: 500.000" inputmode="numeric"
+        oninput="this.value = this.value.replace(/\D/g,'') ? parseInt(this.value.replace(/\D/g,'')).toLocaleString('id-ID') : ''">
+    </div>
+
+    <button class="modal-btn edit" onclick="submitBayar()">✅ Bayar Sekarang</button>
+    <button class="modal-btn cancel" onclick="closeBayarModal()">Batal</button>
+  </div>
+</div>
+
 <script src="js/storage.js"></script>
 <script src="js/app.js"></script>
 <script>
@@ -212,29 +237,60 @@ function renderDebtList(list, container, type) {
     const durationInfo = d.duration ? ` · ${d.duration} bulan` : '';
 
     return `
-      <div class="debt-item ${d.status}" onclick="showDebtDetail(${d.id})">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <div>
+      <div class="debt-item ${d.status}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;" onclick="showDebtDetail(${d.id})">
+          <div style="flex:1;padding-right:8px;">
             <div style="font-weight:bold;font-size:15px;">${d.name}</div>
             <div style="font-size:11px;opacity:.55;margin-top:3px;">${interestInfo}${durationInfo}</div>
             ${d.startDate ? `<div style="font-size:11px;opacity:.55;">Mulai: ${new Date(d.startDate).toLocaleDateString('id-ID')}</div>` : ''}
             ${d.note ? `<div style="font-size:12px;opacity:.6;margin-top:2px;">📝 ${d.note}</div>` : ''}
           </div>
           <div style="text-align:right;">
-            <div style="font-weight:bold;color:${amountColor};font-size:16px;">${amountPrefix}${fmt(d.amount)}</div>
+            <div style="font-weight:bold;color:${amountColor};font-size:15px;">${amountPrefix}${fmt(d.amount)}</div>
             <div style="font-size:11px;color:${statusColor};margin-top:4px;">${statusLabel}</div>
           </div>
         </div>
+        ${d.status !== 'paid' ? `
+        <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+          <button onclick="openBayarModal(${d.id})" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(0,232,122,0.4);background:rgba(0,232,122,0.1);color:#00e87a;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">💳 Bayar</button>
+        </div>` : ''}
       </div>
     `;
   }).join('');
 }
 
+function calcTotalBayar(debt) {
+  const pokok  = Number(debt.amount) || 0;
+  const bunga  = parseFloat((debt.interest||'0').replace(',','.')) || 0;
+  const jangka = parseInt(debt.duration) || 0;
+  const tipe   = (debt.interestType||'flat').toLowerCase();
+
+  if (!bunga || !jangka) return pokok;
+
+  if (tipe === 'flat') {
+    const bungaPerBulan = (pokok * (bunga/100)) / 12;
+    return pokok + (bungaPerBulan * jangka);
+  } else {
+    const r = (bunga/100) / 12;
+    if (r === 0) return pokok;
+    const cicilan = pokok * (r * Math.pow(1+r,jangka)) / (Math.pow(1+r,jangka)-1);
+    return cicilan * jangka;
+  }
+}
+
 function updateDebtSummary() {
   const debts = getDebts();
-  const fmt = v => 'Rp ' + v.toLocaleString('id-ID');
-  const totalOwed = debts.filter(d=>d.debtType==='owed'&&d.status!=='paid').reduce((s,d)=>s+Number(d.amount),0);
-  const totalLent = debts.filter(d=>d.debtType==='lent'&&d.status!=='paid').reduce((s,d)=>s+Number(d.amount),0);
+  const fmt = v => 'Rp ' + Math.round(v).toLocaleString('id-ID');
+
+  // Total berutang sudah termasuk bunga
+  const totalOwed = debts
+    .filter(d => d.debtType==='owed' && d.status!=='paid')
+    .reduce((s,d) => s + calcTotalBayar(d), 0);
+
+  const totalLent = debts
+    .filter(d => d.debtType==='lent' && d.status!=='paid')
+    .reduce((s,d) => s + Number(d.amount||0), 0);
+
   document.getElementById('totalOwed').innerText = fmt(totalOwed);
   document.getElementById('totalLent').innerText = fmt(totalLent);
 }
@@ -299,6 +355,64 @@ function saveDebt() {
   updateDebtSummary();
 }
 
+function openBayarModal(id) {
+  const debt = getDebts().find(d => d.id === id);
+  if (!debt) return;
+  document.getElementById('bayarDebtId').value = id;
+  document.getElementById('bayarNominal').value = '';
+  document.getElementById('bayarDebtName').innerText = debt.name;
+  document.getElementById('bayarSisaUtang').innerText = 'Rp ' + Number(debt.amount).toLocaleString('id-ID');
+  document.getElementById('bayarModal').style.display = 'flex';
+}
+
+function submitBayar() {
+  const id    = document.getElementById('bayarDebtId').value;
+  const bayar = parseDebtMoney(document.getElementById('bayarNominal').value);
+  if (!bayar || bayar <= 0) { alert('Masukkan nominal pembayaran.'); return; }
+
+  const debts = getDebts();
+  const idx   = debts.findIndex(d => String(d.id) === String(id));
+  if (idx === -1) return;
+
+  // Simpan riwayat pembayaran
+  if (!debts[idx].payments) debts[idx].payments = [];
+  debts[idx].payments.push({ date: new Date().toISOString().split('T')[0], amount: bayar });
+
+  const sisaBaru = Number(debts[idx].amount) - bayar;
+  if (sisaBaru <= 0) {
+    debts[idx].amount = 0;
+    debts[idx].status = 'paid';
+    alert('🎉 Utang lunas!');
+  } else {
+    debts[idx].amount = sisaBaru;
+  }
+
+  saveDebts(debts);
+  closeBayarModal();
+  renderDebts();
+  updateDebtSummary();
+}
+
+function closeBayarModal() {
+  document.getElementById('bayarModal').style.display = 'none';
+}
+
+function handleBayarModalOutside(e) {
+  if (e.target === document.getElementById('bayarModal')) closeBayarModal();
+}
+
+function bayarUtang(id) {
+  if (!confirm('Tandai utang ini sebagai Lunas?')) return;
+  const debts = getDebts();
+  const idx = debts.findIndex(d => d.id === id);
+  if (idx !== -1) {
+    debts[idx].status = 'paid';
+    saveDebts(debts);
+    renderDebts();
+    updateDebtSummary();
+  }
+}
+
 function closeDebtModal() { document.getElementById('debtModal').style.display = 'none'; }
 function handleDebtModalOutside(e) { if (e.target===document.getElementById('debtModal')) closeDebtModal(); }
 
@@ -324,7 +438,32 @@ function showDebtDetail(id) {
   if (debt.interest)  info += `💹 Bunga: ${debt.interest}% (${debt.interestType||'flat'})<br>`;
   if (debt.note)      info += `📝 ${debt.note}<br>`;
 
-  // ── Kalkulasi bunga ──
+  // ── Ringkasan Pembayaran ──
+  const payments       = debt.payments || [];
+  const totalBayar_hist = payments.reduce((s, p) => s + Number(p.amount), 0);
+  const jumlahBulan    = payments.length;
+
+  // Total kewajiban = pokok + bunga (dari kalkulasi)
+  const totalKewajiban = calcTotalBayar(debt) + totalBayar_hist; // pokok sisa + sudah bayar = total awal
+  const sisaKewajiban  = totalKewajiban - totalBayar_hist;
+
+  if (payments.length > 0) {
+    info += `<div style="background:rgba(0,232,122,0.06);border:1px solid rgba(0,232,122,0.15);border-radius:12px;padding:12px;margin-top:8px;margin-bottom:8px;">
+      <div style="font-weight:700;font-size:13px;margin-bottom:8px;">📋 Riwayat Pembayaran</div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+        <span style="opacity:.6;">Cicilan Terbayar</span>
+        <span style="color:#00e87a;font-weight:700;">${jumlahBulan} kali</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+        <span style="opacity:.6;">Total Sudah Dibayar</span>
+        <span style="color:#00e87a;font-weight:700;">${fmt(Math.round(totalBayar_hist))}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;">
+        <span style="opacity:.6;">Sisa (Pokok + Bunga)</span>
+        <span style="color:#ff4757;font-weight:700;">${fmt(Math.round(sisaKewajiban))}</span>
+      </div>
+    </div>`;
+  }
   const pokok   = Number(debt.amount) || 0;
   const bunga   = parseFloat((debt.interest||'0').replace(',','.')) || 0;
   const jangka  = parseInt(debt.duration) || 0;
