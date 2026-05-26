@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>FinancialFreedom</title>
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .row-2 { display:flex; gap:8px; }
+    .row-2 > .input-group { flex:1; }
+    .input-group label { display:block; margin-bottom:7px; font-size:11px; font-weight:600; color:rgba(240,244,255,0.5); text-transform:uppercase; letter-spacing:0.5px; }
+    .input-suffix { position:relative; }
+    .input-suffix input { padding-right: 36px; }
+    .input-suffix span { position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:13px; color:rgba(240,244,255,0.5); pointer-events:none; }
+  </style>
 </head>
 <body>
 <div class="app-container">
@@ -14,7 +22,6 @@
     <button class="add-btn" onclick="showDebtModal()">+ Tambah</button>
   </header>
 
-  <!-- Ringkasan -->
   <div class="debt-summary-row">
     <div class="debt-summary-card glass">
       <div class="debt-summary-label">Saya Berutang</div>
@@ -26,47 +33,25 @@
     </div>
   </div>
 
-  <!-- Tab -->
   <div class="debt-tabs">
     <button class="debt-tab active" id="tabOwed" onclick="switchDebtTab('owed')">😰 Saya Berutang</button>
     <button class="debt-tab" id="tabLent" onclick="switchDebtTab('lent')">🤝 Saya Meminjamkan</button>
   </div>
 
-  <!-- List Berutang -->
   <div id="owedList" class="transaction-list"></div>
-
-  <!-- List Meminjamkan -->
   <div id="lentList" class="transaction-list" style="display:none;"></div>
 
   <nav class="bottom-nav">
-    <a href="index.html" class="nav-item">
-      <span class="nav-icon">🏠</span>
-      <span class="nav-label">Beranda</span>
-    </a>
-    <a href="transaksi.html" class="nav-item">
-      <span class="nav-icon">📝</span>
-      <span class="nav-label">Transaksi</span>
-    </a>
-    <a href="analisis.html" class="nav-item">
-      <span class="nav-icon">📊</span>
-      <span class="nav-label">Analisis</span>
-    </a>
-    <a href="utang.html" class="nav-item active">
-      <span class="nav-icon">💸</span>
-      <span class="nav-label">Utang</span>
-    </a>
-    <a href="tabungan.html" class="nav-item">
-      <span class="nav-icon">🎯</span>
-      <span class="nav-label">Tabungan</span>
-    </a>
-    <a href="pengaturan.html" class="nav-item">
-      <span class="nav-icon">⚙️</span>
-      <span class="nav-label">Setting</span>
-    </a>
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">Beranda</span></a>
+    <a href="transaksi.html" class="nav-item"><span class="nav-icon">📝</span><span class="nav-label">Transaksi</span></a>
+    <a href="analisis.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Analisis</span></a>
+    <a href="utang.html" class="nav-item active"><span class="nav-icon">💸</span><span class="nav-label">Utang</span></a>
+    <a href="tabungan.html" class="nav-item"><span class="nav-icon">🎯</span><span class="nav-label">Tabungan</span></a>
+    <a href="pengaturan.html" class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">Setting</span></a>
   </nav>
 </div>
 
-<!-- MODAL TAMBAH/EDIT UTANG -->
+<!-- MODAL TAMBAH/EDIT -->
 <div class="modal" id="debtModal" onclick="handleDebtModalOutside(event)">
   <div class="modal-content glass">
     <div class="modal-handle"></div>
@@ -75,6 +60,7 @@
     <input type="hidden" id="debtId">
     <input type="hidden" id="debtTypeHidden">
 
+    <!-- Tipe -->
     <div class="input-group">
       <label>Tipe</label>
       <div class="type-selector">
@@ -83,26 +69,55 @@
       </div>
     </div>
 
-    <div class="input-group">
-      <label>Nama (kepada/dari siapa)</label>
-      <input type="text" id="debtName" class="premium-input" placeholder="Contoh: Pak Budi">
+    <!-- Dari/Kepada + Tanggal pinjam (sejajar) -->
+    <div class="row-2">
+      <div class="input-group">
+        <label id="nameLabel">Dari Siapa</label>
+        <input type="text" id="debtName" class="premium-input" placeholder="Nama">
+      </div>
+      <div class="input-group">
+        <label>Tgl Pinjam</label>
+        <input type="date" id="debtStartDate" class="premium-input">
+      </div>
     </div>
 
-    <div class="input-group">
-      <label>Nominal</label>
-      <input type="text" id="debtAmount" class="premium-input" placeholder="Contoh: 500.000" inputmode="numeric">
+    <!-- Nominal + Bunga (sejajar) -->
+    <div class="row-2">
+      <div class="input-group">
+        <label>Nominal</label>
+        <input type="text" id="debtAmount" class="premium-input" placeholder="500.000" inputmode="numeric">
+      </div>
+      <div class="input-group">
+        <label>Bunga (%)</label>
+        <div class="input-suffix">
+          <input type="text" id="debtInterest" class="premium-input" placeholder="1,5" inputmode="decimal">
+          <span>%</span>
+        </div>
+      </div>
     </div>
 
-    <div class="input-group">
-      <label>Jatuh Tempo</label>
-      <input type="date" id="debtDueDate" class="premium-input">
+    <!-- Jangka waktu + Tipe bunga (sejajar) -->
+    <div class="row-2">
+      <div class="input-group">
+        <label>Jangka (Bulan)</label>
+        <input type="number" id="debtDuration" class="premium-input" placeholder="12" min="1">
+      </div>
+      <div class="input-group">
+        <label>Tipe Bunga</label>
+        <div class="type-selector">
+          <button class="type-btn active" id="btnFlat" onclick="selectInterestType('flat')" style="font-size:12px;padding:10px 6px;">Flat</button>
+          <button class="type-btn" id="btnMenurun" onclick="selectInterestType('menurun')" style="font-size:12px;padding:10px 6px;">Menurun</button>
+        </div>
+      </div>
     </div>
 
+    <!-- Catatan -->
     <div class="input-group">
       <label>Catatan</label>
       <textarea id="debtNote" class="premium-input" rows="2" placeholder="Catatan tambahan..."></textarea>
     </div>
 
+    <!-- Status -->
     <div class="input-group">
       <label>Status</label>
       <select id="debtStatus" class="premium-select">
@@ -117,17 +132,15 @@
   </div>
 </div>
 
-<!-- MODAL DETAIL/HAPUS -->
+<!-- MODAL DETAIL -->
 <div class="modal" id="debtDetailModal" onclick="handleDetailModalOutside(event)">
   <div class="modal-content glass">
     <div class="modal-handle"></div>
     <h3 id="detailDebtName" style="margin-bottom:4px;"></h3>
     <div id="detailDebtType" style="font-size:12px;opacity:.6;margin-bottom:16px;"></div>
     <div id="detailDebtAmount" style="font-size:26px;font-weight:bold;margin-bottom:8px;"></div>
-    <div id="detailDebtDue" style="font-size:13px;opacity:.7;margin-bottom:6px;"></div>
-    <div id="detailDebtNote" style="font-size:13px;opacity:.7;margin-bottom:16px;"></div>
+    <div id="detailDebtInfo" style="font-size:13px;opacity:.7;line-height:1.8;margin-bottom:16px;"></div>
     <div id="detailDebtStatus" style="font-size:13px;margin-bottom:16px;"></div>
-
     <button class="modal-btn edit" onclick="editDebtFromDetail()">✏️ Edit</button>
     <button class="modal-btn delete" onclick="deleteDebtFromDetail()">🗑️ Hapus</button>
     <button class="modal-btn cancel" onclick="closeDetailModal()">Tutup</button>
@@ -137,23 +150,16 @@
 <script src="js/storage.js"></script>
 <script src="js/app.js"></script>
 <script>
-// ---- DATA (pakai localStorage langsung seperti pola app) ----
 function getDebts() {
-  try {
-    return JSON.parse(localStorage.getItem('dompetku_debts') || '[]');
-  } catch(e) { return []; }
+  try { return JSON.parse(localStorage.getItem('dompetku_debts') || '[]'); } catch(e) { return []; }
 }
+function saveDebts(debts) { localStorage.setItem('dompetku_debts', JSON.stringify(debts)); }
 
-function saveDebts(debts) {
-  localStorage.setItem('dompetku_debts', JSON.stringify(debts));
-}
+let currentDebtTab   = 'owed';
+let currentDetailId  = null;
+let currentDebtType  = 'owed';
+let currentInterestType = 'flat';
 
-// ---- STATE ----
-let currentDebtTab = 'owed';
-let currentDetailId = null;
-let currentDebtType = 'owed';
-
-// ---- INIT ----
 document.addEventListener('DOMContentLoaded', () => {
   initDebtAmountInput();
   renderDebts();
@@ -164,16 +170,12 @@ function initDebtAmountInput() {
   const input = document.getElementById('debtAmount');
   input.addEventListener('input', function() {
     let raw = this.value.replace(/\D/g, '');
-    if (raw) this.value = parseInt(raw).toLocaleString('id-ID');
-    else this.value = '';
+    this.value = raw ? parseInt(raw).toLocaleString('id-ID') : '';
   });
 }
 
-function parseDebtMoney(val) {
-  return parseInt((val || '0').replace(/\D/g, '')) || 0;
-}
+function parseDebtMoney(val) { return parseInt((val||'0').replace(/\D/g,'')) || 0; }
 
-// ---- TABS ----
 function switchDebtTab(tab) {
   currentDebtTab = tab;
   document.getElementById('tabOwed').classList.toggle('active', tab === 'owed');
@@ -182,7 +184,6 @@ function switchDebtTab(tab) {
   document.getElementById('lentList').style.display = tab === 'lent' ? 'block' : 'none';
 }
 
-// ---- RENDER ----
 function renderDebts() {
   const debts = getDebts();
   renderDebtList(debts.filter(d => d.debtType === 'owed'), document.getElementById('owedList'), 'owed');
@@ -193,32 +194,34 @@ function renderDebtList(list, container, type) {
   if (!container) return;
   if (list.length === 0) {
     container.innerHTML = `<div class="glass" style="padding:40px;text-align:center;margin:0 16px;opacity:.6;">
-      ${type === 'owed' ? 'Tidak ada utang yang perlu dicatat. 🎉' : 'Belum ada piutang tercatat.'}
+      ${type === 'owed' ? 'Tidak ada utang. 🎉' : 'Belum ada piutang.'}
     </div>`;
     return;
   }
-
-  // Sort: overdue → active → paid
-  const order = { overdue: 0, active: 1, paid: 2 };
-  list = [...list].sort((a, b) => (order[a.status] ?? 1) - (order[b.status] ?? 1));
+  const order = { overdue:0, active:1, paid:2 };
+  list = [...list].sort((a,b) => (order[a.status]??1)-(order[b.status]??1));
 
   container.innerHTML = list.map(d => {
-    const statusLabel = d.status === 'paid' ? '✅ Lunas' : d.status === 'overdue' ? '⚠️ Terlambat' : '🕐 Aktif';
-    const statusColor = d.status === 'paid' ? '#00ff88' : d.status === 'overdue' ? '#ff4757' : '#ffa502';
-    const amountColor = type === 'owed' ? '#ff4757' : '#00ff88';
-    const amountPrefix = type === 'owed' ? '-' : '+';
-    const dueText = d.dueDate ? `Jatuh tempo: ${new Date(d.dueDate).toLocaleDateString('id-ID')}` : '';
+    const statusLabel = d.status==='paid' ? '✅ Lunas' : d.status==='overdue' ? '⚠️ Terlambat' : '🕐 Aktif';
+    const statusColor = d.status==='paid' ? '#00e87a' : d.status==='overdue' ? '#ff4757' : '#ffa502';
+    const amountColor = type==='owed' ? '#ff4757' : '#00e87a';
+    const amountPrefix = type==='owed' ? '-' : '+';
+    const fmt = v => 'Rp ' + Number(v).toLocaleString('id-ID');
+
+    const interestInfo = d.interest ? ` · Bunga ${d.interest}% (${d.interestType||'flat'})` : '';
+    const durationInfo = d.duration ? ` · ${d.duration} bulan` : '';
 
     return `
       <div class="debt-item ${d.status}" onclick="showDebtDetail(${d.id})">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
           <div>
             <div style="font-weight:bold;font-size:15px;">${d.name}</div>
-            ${dueText ? `<div style="font-size:12px;opacity:.6;margin-top:2px;">${dueText}</div>` : ''}
+            <div style="font-size:11px;opacity:.55;margin-top:3px;">${interestInfo}${durationInfo}</div>
+            ${d.startDate ? `<div style="font-size:11px;opacity:.55;">Mulai: ${new Date(d.startDate).toLocaleDateString('id-ID')}</div>` : ''}
             ${d.note ? `<div style="font-size:12px;opacity:.6;margin-top:2px;">📝 ${d.note}</div>` : ''}
           </div>
           <div style="text-align:right;">
-            <div style="font-weight:bold;color:${amountColor};font-size:16px;">${amountPrefix}${formatCurrency ? formatCurrency(d.amount) : 'Rp '+d.amount.toLocaleString('id-ID')}</div>
+            <div style="font-weight:bold;color:${amountColor};font-size:16px;">${amountPrefix}${fmt(d.amount)}</div>
             <div style="font-size:11px;color:${statusColor};margin-top:4px;">${statusLabel}</div>
           </div>
         </div>
@@ -229,55 +232,65 @@ function renderDebtList(list, container, type) {
 
 function updateDebtSummary() {
   const debts = getDebts();
-  const totalOwed = debts.filter(d => d.debtType === 'owed' && d.status !== 'paid').reduce((s, d) => s + d.amount, 0);
-  const totalLent = debts.filter(d => d.debtType === 'lent' && d.status !== 'paid').reduce((s, d) => s + d.amount, 0);
   const fmt = v => 'Rp ' + v.toLocaleString('id-ID');
+  const totalOwed = debts.filter(d=>d.debtType==='owed'&&d.status!=='paid').reduce((s,d)=>s+Number(d.amount),0);
+  const totalLent = debts.filter(d=>d.debtType==='lent'&&d.status!=='paid').reduce((s,d)=>s+Number(d.amount),0);
   document.getElementById('totalOwed').innerText = fmt(totalOwed);
   document.getElementById('totalLent').innerText = fmt(totalLent);
 }
 
-// ---- MODAL TAMBAH/EDIT ----
+// ── MODAL ──
 function showDebtModal(prefillType) {
   currentDebtType = prefillType || currentDebtTab;
   document.getElementById('debtId').value = '';
   document.getElementById('debtName').value = '';
   document.getElementById('debtAmount').value = '';
-  document.getElementById('debtDueDate').value = '';
+  document.getElementById('debtInterest').value = '';
+  document.getElementById('debtDuration').value = '';
+  document.getElementById('debtStartDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('debtNote').value = '';
   document.getElementById('debtStatus').value = 'active';
   document.getElementById('debtModalTitle').innerText = 'Tambah Utang';
   selectDebtType(currentDebtType);
+  selectInterestType('flat');
   document.getElementById('debtModal').style.display = 'flex';
 }
 
 function selectDebtType(type) {
   currentDebtType = type;
-  document.getElementById('btnOwed').classList.toggle('active', type === 'owed');
-  document.getElementById('btnLent').classList.toggle('active', type === 'lent');
+  document.getElementById('btnOwed').classList.toggle('active', type==='owed');
+  document.getElementById('btnLent').classList.toggle('active', type==='lent');
   document.getElementById('debtTypeHidden').value = type;
+  document.getElementById('nameLabel').innerText = type==='owed' ? 'Dari Siapa' : 'Kepada Siapa';
+}
+
+function selectInterestType(type) {
+  currentInterestType = type;
+  document.getElementById('btnFlat').classList.toggle('active', type==='flat');
+  document.getElementById('btnMenurun').classList.toggle('active', type==='menurun');
 }
 
 function saveDebt() {
-  const id = document.getElementById('debtId').value;
-  const name = document.getElementById('debtName').value.trim();
-  const amount = parseDebtMoney(document.getElementById('debtAmount').value);
-  const dueDate = document.getElementById('debtDueDate').value;
-  const note = document.getElementById('debtNote').value.trim();
-  const status = document.getElementById('debtStatus').value;
+  const id       = document.getElementById('debtId').value;
+  const name     = document.getElementById('debtName').value.trim();
+  const amount   = parseDebtMoney(document.getElementById('debtAmount').value);
+  const interest = document.getElementById('debtInterest').value.replace(',', '.').trim();
+  const duration = document.getElementById('debtDuration').value.trim();
+  const startDate= document.getElementById('debtStartDate').value;
+  const note     = document.getElementById('debtNote').value.trim();
+  const status   = document.getElementById('debtStatus').value;
   const debtType = document.getElementById('debtTypeHidden').value || currentDebtType;
 
-  if (!name || amount <= 0) {
-    alert('Isi nama dan nominal utang.');
-    return;
-  }
+  if (!name || amount <= 0) { alert('Isi nama dan nominal.'); return; }
 
   const debts = getDebts();
+  const data  = { name, amount, interest, interestType: currentInterestType, duration, startDate, note, status, debtType };
 
   if (id) {
     const idx = debts.findIndex(d => String(d.id) === String(id));
-    if (idx !== -1) debts[idx] = { ...debts[idx], name, amount, dueDate, note, status, debtType };
+    if (idx !== -1) debts[idx] = { ...debts[idx], ...data };
   } else {
-    debts.push({ id: Date.now(), name, amount, dueDate, note, status, debtType });
+    debts.push({ id: Date.now(), ...data });
   }
 
   saveDebts(debts);
@@ -286,66 +299,61 @@ function saveDebt() {
   updateDebtSummary();
 }
 
-function closeDebtModal() {
-  document.getElementById('debtModal').style.display = 'none';
-}
+function closeDebtModal() { document.getElementById('debtModal').style.display = 'none'; }
+function handleDebtModalOutside(e) { if (e.target===document.getElementById('debtModal')) closeDebtModal(); }
 
-function handleDebtModalOutside(e) {
-  if (e.target === document.getElementById('debtModal')) closeDebtModal();
-}
-
-// ---- MODAL DETAIL ----
+// ── DETAIL ──
 function showDebtDetail(id) {
   const debt = getDebts().find(d => d.id === id);
   if (!debt) return;
   currentDetailId = id;
 
-  const fmt = v => 'Rp ' + v.toLocaleString('id-ID');
-  const amountColor = debt.debtType === 'owed' ? '#ff4757' : '#00ff88';
-  const typeLabel = debt.debtType === 'owed' ? '😰 Saya berutang kepada' : '🤝 Saya meminjamkan kepada';
-  const statusMap = { paid: '✅ Lunas', overdue: '⚠️ Terlambat', active: '🕐 Aktif' };
+  const fmt = v => 'Rp ' + Number(v).toLocaleString('id-ID');
+  const amountColor = debt.debtType==='owed' ? '#ff4757' : '#00e87a';
+  const typeLabel = debt.debtType==='owed' ? '😰 Berutang dari' : '🤝 Meminjamkan kepada';
+  const statusMap = { paid:'✅ Lunas', overdue:'⚠️ Terlambat', active:'🕐 Aktif' };
 
   document.getElementById('detailDebtName').innerText = debt.name;
   document.getElementById('detailDebtType').innerText = typeLabel + ' ' + debt.name;
   document.getElementById('detailDebtAmount').innerText = fmt(debt.amount);
   document.getElementById('detailDebtAmount').style.color = amountColor;
-  document.getElementById('detailDebtDue').innerText = debt.dueDate ? '📅 Jatuh tempo: ' + new Date(debt.dueDate).toLocaleDateString('id-ID') : '';
-  document.getElementById('detailDebtNote').innerText = debt.note ? '📝 ' + debt.note : '';
-  document.getElementById('detailDebtStatus').innerHTML = `Status: <strong>${statusMap[debt.status] || '-'}</strong>`;
 
+  let info = '';
+  if (debt.startDate) info += `📅 Mulai: ${new Date(debt.startDate).toLocaleDateString('id-ID')}<br>`;
+  if (debt.duration)  info += `⏱️ Jangka: ${debt.duration} bulan<br>`;
+  if (debt.interest)  info += `💹 Bunga: ${debt.interest}% (${debt.interestType||'flat'})<br>`;
+  if (debt.note)      info += `📝 ${debt.note}`;
+
+  document.getElementById('detailDebtInfo').innerHTML = info;
+  document.getElementById('detailDebtStatus').innerHTML = `Status: <strong>${statusMap[debt.status]||'-'}</strong>`;
   document.getElementById('debtDetailModal').style.display = 'flex';
 }
 
-function closeDetailModal() {
-  document.getElementById('debtDetailModal').style.display = 'none';
-  currentDetailId = null;
-}
-
-function handleDetailModalOutside(e) {
-  if (e.target === document.getElementById('debtDetailModal')) closeDetailModal();
-}
+function closeDetailModal() { document.getElementById('debtDetailModal').style.display='none'; currentDetailId=null; }
+function handleDetailModalOutside(e) { if(e.target===document.getElementById('debtDetailModal')) closeDetailModal(); }
 
 function editDebtFromDetail() {
   const debt = getDebts().find(d => d.id === currentDetailId);
   if (!debt) return;
   closeDetailModal();
 
-  const fmt = v => v.toLocaleString('id-ID');
-  document.getElementById('debtId').value = debt.id;
-  document.getElementById('debtName').value = debt.name;
-  document.getElementById('debtAmount').value = fmt(debt.amount);
-  document.getElementById('debtDueDate').value = debt.dueDate || '';
-  document.getElementById('debtNote').value = debt.note || '';
-  document.getElementById('debtStatus').value = debt.status || 'active';
+  document.getElementById('debtId').value      = debt.id;
+  document.getElementById('debtName').value    = debt.name;
+  document.getElementById('debtAmount').value  = Number(debt.amount).toLocaleString('id-ID');
+  document.getElementById('debtInterest').value= debt.interest || '';
+  document.getElementById('debtDuration').value= debt.duration || '';
+  document.getElementById('debtStartDate').value= debt.startDate || '';
+  document.getElementById('debtNote').value    = debt.note || '';
+  document.getElementById('debtStatus').value  = debt.status || 'active';
   document.getElementById('debtModalTitle').innerText = 'Edit Utang';
   selectDebtType(debt.debtType);
+  selectInterestType(debt.interestType || 'flat');
   document.getElementById('debtModal').style.display = 'flex';
 }
 
 function deleteDebtFromDetail() {
   if (!confirm('Hapus data utang ini?')) return;
-  const debts = getDebts().filter(d => d.id !== currentDetailId);
-  saveDebts(debts);
+  saveDebts(getDebts().filter(d => d.id !== currentDetailId));
   closeDetailModal();
   renderDebts();
   updateDebtSummary();
