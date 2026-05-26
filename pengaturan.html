@@ -2,6 +2,8 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <script src="js/auth.js"></script>
+  <script>if(!isFirstTime()&&!isLoggedIn())window.location.replace("splash.html");</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>FinancialFreedom</title>
   <link rel="stylesheet" href="css/styles.css">
@@ -15,13 +17,34 @@
   </header>
 
   <div class="settings-section glass">
-    <h3>👤 Profil</h3>
-    <div class="input-group" style="margin-top:12px;">
-      <label>Nama Pengguna</label>
-      <input type="text" id="settingsUserName" class="premium-input">
+    <h3>👤 Profil & Keamanan</h3>
+    <div style="font-size:12px;color:rgba(240,244,255,0.5);margin:8px 0 16px;">Ubah username, password, atau nama lengkap akun kamu.</div>
+
+    <div class="input-group">
+      <label>Username</label>
+      <input type="text" id="settingsUsername" class="premium-input" placeholder="Username baru"
+        oninput="this.value=this.value.replace(/\s/g,'').toLowerCase()">
     </div>
-    <div style="display:flex;justify-content:flex-end;margin-top:10px;">
-      <button onclick="saveUserSettings()" style="padding:9px 20px;border-radius:10px;border:none;background:#00e87a;color:#070c18;font-weight:700;font-size:13px;font-family:inherit;cursor:pointer;">Simpan</button>
+    <div class="input-group">
+      <label>Password Baru <span style="font-size:10px;opacity:.5;">(kosongkan jika tidak ingin ubah)</span></label>
+      <div style="position:relative;">
+        <input type="password" id="settingsPassword" class="premium-input" placeholder="Password baru (min. 6 karakter)" style="padding-right:44px;">
+        <button onclick="toggleSettingsPass('settingsPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(240,244,255,0.4);cursor:pointer;font-size:16px;">👁️</button>
+      </div>
+    </div>
+    <div class="input-group">
+      <label>Nama Lengkap (Kunci Pemulihan)</label>
+      <input type="text" id="settingsFullName" class="premium-input" placeholder="Nama lengkap tanpa spasi"
+        oninput="this.value=this.value.replace(/\s/g,'')">
+    </div>
+    <div style="font-size:11px;color:rgba(255,165,0,0.6);margin-bottom:12px;">⚠️ Password saat ini diperlukan untuk menyimpan perubahan</div>
+    <div class="input-group">
+      <label>Password Saat Ini</label>
+      <input type="password" id="settingsCurrentPass" class="premium-input" placeholder="Masukkan password saat ini">
+    </div>
+    <div id="settingsMsg" style="display:none;padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:10px;"></div>
+    <div style="display:flex;justify-content:flex-end;">
+      <button onclick="saveSecuritySettings()" style="padding:9px 20px;border-radius:10px;border:none;background:#00e87a;color:#070c18;font-weight:700;font-size:13px;font-family:inherit;cursor:pointer;">Simpan Perubahan</button>
     </div>
   </div>
 
@@ -40,6 +63,14 @@
     <div style="display:flex;gap:8px;margin-top:10px;">
       <button onclick="showReportModal()" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(0,232,122,0.4);background:rgba(0,232,122,0.08);color:#00e87a;font-weight:600;font-size:13px;font-family:inherit;cursor:pointer;">Preview</button>
       <button onclick="window.print()" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(240,244,255,0.7);font-weight:600;font-size:13px;font-family:inherit;cursor:pointer;">Export PDF</button>
+    </div>
+  </div>
+
+  <div class="settings-section glass">
+    <h3>🚪 Keluar</h3>
+    <p style="font-size:13px;opacity:.7;margin-bottom:12px;">Keluar dari sesi ini. Data tetap aman.</p>
+    <div style="display:flex;justify-content:flex-end;">
+      <button onclick="logout()" style="padding:9px 20px;border-radius:10px;border:1px solid rgba(255,165,0,0.4);background:rgba(255,165,0,0.08);color:#ffa502;font-weight:600;font-size:13px;font-family:inherit;cursor:pointer;">Keluar</button>
     </div>
   </div>
 
@@ -201,6 +232,58 @@ function closeReportModal() {
 
 function handleModalOutsideClick(e) {
   if (e.target === document.getElementById('reportModal')) closeReportModal();
+}
+
+function toggleSettingsPass(id, btn) {
+  const input = document.getElementById(id);
+  if (input.type === 'password') { input.type = 'text'; btn.innerText = '🙈'; }
+  else { input.type = 'password'; btn.innerText = '👁️'; }
+}
+
+function saveSecuritySettings() {
+  const auth = getAuth();
+  if (!auth) return;
+
+  const currentPass = document.getElementById('settingsCurrentPass').value;
+  const msgEl = document.getElementById('settingsMsg');
+
+  function showMsg(msg, ok) {
+    msgEl.innerText = msg;
+    msgEl.style.background = ok ? 'rgba(0,232,122,0.1)' : 'rgba(255,71,87,0.1)';
+    msgEl.style.border = ok ? '1px solid rgba(0,232,122,0.3)' : '1px solid rgba(255,71,87,0.3)';
+    msgEl.style.color = ok ? '#00e87a' : '#ff4757';
+    msgEl.style.display = 'block';
+    setTimeout(() => msgEl.style.display = 'none', 3000);
+  }
+
+  if (!currentPass) return showMsg('Masukkan password saat ini.', false);
+  if (simpleHash(currentPass) !== auth.password) return showMsg('Password saat ini salah.', false);
+
+  const newUsername = document.getElementById('settingsUsername').value.trim();
+  const newPassword = document.getElementById('settingsPassword').value;
+  const newFullName = document.getElementById('settingsFullName').value.trim();
+
+  if (newUsername && newUsername.length < 3) return showMsg('Username minimal 3 karakter.', false);
+  if (newPassword && newPassword.length < 6) return showMsg('Password baru minimal 6 karakter.', false);
+  if (newFullName && /\s/.test(newFullName)) return showMsg('Nama lengkap tidak boleh ada spasi.', false);
+
+  const updated = { ...auth };
+  if (newUsername) { updated.username = newUsername; updated.displayName = newUsername; }
+  if (newPassword) updated.password = simpleHash(newPassword);
+  if (newFullName) updated.fullName = simpleHash(newFullName.toLowerCase());
+
+  saveAuth(updated);
+
+  // Update nama di settings app juga
+  if (newUsername) {
+    const settings = JSON.parse(localStorage.getItem('dompetku_settings') || '{}');
+    settings.userName = newUsername;
+    localStorage.setItem('dompetku_settings', JSON.stringify(settings));
+  }
+
+  document.getElementById('settingsCurrentPass').value = '';
+  document.getElementById('settingsPassword').value = '';
+  showMsg('✅ Perubahan berhasil disimpan!', true);
 }
 </script>
 </body>
