@@ -25,8 +25,8 @@ function getFilteredTrendData(mode) {
     }
 
   } else if (mode === 'month') {
-    // 12 bulan terakhir, label: "Jan-25", "Feb-26", dst
-    for (let i = 11; i >= 0; i--) {
+    // 6 bulan terakhir, label: "Jan-25", "Feb-26", dst
+    for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const mn = d.getMonth();
       const yr = String(d.getFullYear()).slice(2);
