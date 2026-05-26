@@ -147,6 +147,17 @@
   </div>
 </div>
 
+<!-- MODAL RIWAYAT PEMBAYARAN -->
+<div class="modal" id="payHistModal" onclick="if(event.target===this)closePayHistModal()">
+  <div class="modal-content glass">
+    <div class="modal-handle"></div>
+    <h3 style="margin-bottom:2px;">📋 Riwayat Pembayaran</h3>
+    <div id="payHistTitle" style="font-size:12px;opacity:.5;margin-bottom:14px;"></div>
+    <div id="payHistList" style="max-height:320px;overflow-y:auto;"></div>
+    <button class="modal-btn cancel" style="margin-top:14px;" onclick="closePayHistModal()">Tutup</button>
+  </div>
+</div>
+
 <!-- MODAL BAYAR -->
 <div class="modal" id="bayarModal" onclick="handleBayarModalOutside(event)">
   <div class="modal-content glass">
@@ -355,6 +366,30 @@ function saveDebt() {
   updateDebtSummary();
 }
 
+function showPaymentHistory(id) {
+  const debt = getDebts().find(d => d.id === id);
+  if (!debt || !debt.payments || debt.payments.length === 0) return;
+
+  const fmt = v => 'Rp ' + Number(v).toLocaleString('id-ID');
+  const rows = debt.payments.map((p, i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;">
+      <div>
+        <div style="font-weight:600;">Cicilan ke-${i+1}</div>
+        <div style="font-size:11px;opacity:.5;">${new Date(p.date).toLocaleDateString('id-ID')}</div>
+      </div>
+      <div style="color:#00e87a;font-weight:700;">${fmt(p.amount)}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('payHistTitle').innerText = debt.name;
+  document.getElementById('payHistList').innerHTML = rows;
+  document.getElementById('payHistModal').style.display = 'flex';
+}
+
+function closePayHistModal() {
+  document.getElementById('payHistModal').style.display = 'none';
+}
+
 function openBayarModal(id) {
   const debt = getDebts().find(d => d.id === id);
   if (!debt) return;
@@ -452,7 +487,7 @@ function showDebtDetail(id) {
       <div style="font-weight:700;font-size:13px;margin-bottom:8px;">📋 Riwayat Pembayaran</div>
       <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
         <span style="opacity:.6;">Cicilan Terbayar</span>
-        <span style="color:#00e87a;font-weight:700;">${jumlahBulan} kali</span>
+        <span style="color:#00e87a;font-weight:700;cursor:pointer;text-decoration:underline dotted;" onclick="showPaymentHistory(${id})">${jumlahBulan} kali →</span>
       </div>
       <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
         <span style="opacity:.6;">Total Sudah Dibayar</span>
@@ -473,28 +508,32 @@ function showDebtDetail(id) {
     info += '<br>';
     if (tipe === 'flat') {
       // Bunga Flat: bunga dihitung dari pokok awal, tetap setiap bulan
-      const bungaPerBulan  = (pokok * (bunga / 100)) / 12;
+      const bungaPerBulan   = (pokok * (bunga / 100)) / 12;
       const cicilanPerBulan = (pokok / jangka) + bungaPerBulan;
-      const totalBunga     = bungaPerBulan * jangka;
-      const totalBayar     = pokok + totalBunga;
+      const totalBunga      = bungaPerBulan * jangka;
+      const totalBayar      = pokok + totalBunga;
+      const fmtBunga        = fmt(Math.round(bungaPerBulan));
+      const fmtCicilan      = fmt(Math.round(cicilanPerBulan));
+      const fmtTotalBunga   = fmt(Math.round(totalBunga));
+      const fmtTotalBayar   = fmt(Math.round(totalBayar));
 
-      info += `<div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;margin-top:4px;">
-        <div style="font-weight:700;font-size:13px;margin-bottom:8px;">📊 Simulasi Bunga Flat</div>
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+      info += `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 12px;margin-top:4px;">
+        <div style="font-weight:700;font-size:12px;margin-bottom:6px;opacity:.7;">📊 Simulasi Bunga Flat</div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;">
           <span style="opacity:.6;">Pokok Pinjaman</span><span>${fmt(pokok)}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
-          <span style="opacity:.6;">Bunga/Bulan</span><span>${fmt(Math.round(bungaPerBulan))}</span>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;">
+          <span style="opacity:.6;">Bunga/Bulan</span><span>${fmtBunga}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
-          <span style="opacity:.6;">Cicilan/Bulan</span><span style="color:#ffa502;font-weight:700;">${fmt(Math.round(cicilanPerBulan))}</span>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;">
+          <span style="opacity:.6;">Cicilan/Bulan</span><span style="color:#ffa502;font-weight:700;">${fmtCicilan}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
-          <span style="opacity:.6;">Total Bunga</span><span style="color:#ff4757;">${fmt(Math.round(totalBunga))}</span>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;">
+          <span style="opacity:.6;">Total Bunga</span><span style="color:#ff4757;">${fmtTotalBunga}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:6px 0;margin-top:2px;">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;">
           <span style="font-weight:700;">Total Bayar</span>
-          <span style="font-weight:800;font-size:15px;color:#00e87a;">${fmt(Math.round(totalBayar))}</span>
+          <span style="font-weight:800;color:#00e87a;">${fmtTotalBayar}</span>
         </div>
       </div>`;
 
@@ -518,20 +557,24 @@ function showDebtDetail(id) {
       }
       const totalBayar = pokok + totalBunga;
 
-      info += `<div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;margin-top:4px;">
-        <div style="font-weight:700;font-size:13px;margin-bottom:8px;">📊 Simulasi Bunga Menurun (Anuitas)</div>
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+      const fmtCicilanM   = fmt(Math.round(cicilanPerBulan));
+      const fmtTotalBungaM = fmt(Math.round(totalBunga));
+      const fmtTotalBayarM = fmt(Math.round(totalBayar));
+
+      info += `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 12px;margin-top:4px;">
+        <div style="font-weight:700;font-size:12px;margin-bottom:6px;opacity:.7;">📊 Simulasi Bunga Menurun (Anuitas)</div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;">
           <span style="opacity:.6;">Pokok Pinjaman</span><span>${fmt(pokok)}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
-          <span style="opacity:.6;">Cicilan/Bulan</span><span style="color:#ffa502;font-weight:700;">${fmt(Math.round(cicilanPerBulan))}</span>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;">
+          <span style="opacity:.6;">Cicilan/Bulan</span><span style="color:#ffa502;font-weight:700;">${fmtCicilanM}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
-          <span style="opacity:.6;">Total Bunga</span><span style="color:#ff4757;">${fmt(Math.round(totalBunga))}</span>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;">
+          <span style="opacity:.6;">Total Bunga</span><span style="color:#ff4757;">${fmtTotalBungaM}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:6px 0;margin-top:2px;">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;">
           <span style="font-weight:700;">Total Bayar</span>
-          <span style="font-weight:800;font-size:15px;color:#00e87a;">${fmt(Math.round(totalBayar))}</span>
+          <span style="font-weight:800;color:#00e87a;">${fmtTotalBayarM}</span>
         </div>
       </div>`;
     }
