@@ -44,13 +44,13 @@ function updateDashboardStats() {
   const monthExpense  = getMonthlyTotal('expense', now.getMonth(), now.getFullYear());
   const totalSavings  = appData.savingsGoals.reduce((s, g) => s + Number(g.savedAmount || 0), 0);
 
-  // Ambil dari dompetku_debts (halaman utang)
+  // Ambil dari dompetku_debts (halaman utang) - tampilkan pokok saja
   const debts = JSON.parse(localStorage.getItem('dompetku_debts') || '[]');
   const totalLoan = debts
     .filter(d => d.debtType === 'owed' && d.status !== 'paid')
     .reduce((s, d) => s + Number(d.amount || 0), 0);
 
-  // Piutang = uang yang kita pinjamkan ke orang lain, belum lunas
+  // Piutang = uang yang kita pinjamkan ke orang lain, belum lunas (pokok saja)
   const totalPiutang = debts
     .filter(d => d.debtType === 'lent' && d.status !== 'paid')
     .reduce((s, d) => s + Number(d.amount || 0), 0);
