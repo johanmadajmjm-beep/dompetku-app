@@ -4,90 +4,140 @@ let pieChart = null;
 
 /* ── Helper: get data based on filter mode ── */
 function getFilteredTrendData(mode) {
-  const labels = [];
+  const labels     = [];
   const incomeData = [];
-  const expenseData = [];
+  const expenseData= [];
   const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-  const now = new Date();
+  const now        = new Date();
+  const nowYear    = now.getFullYear();
+  const nowMonth   = now.getMonth();
+
+  // Cari range transaksi yang benar-benar ada data
+  function getEarliestDate() {
+    if (!appData.transactions || appData.transactions.length === 0) return null;
+    let earliest = null;
+    appData.transactions.forEach(t => {
+      if (!t.date) return;
+      const d = new Date(t.date);
+      if (!isNaN(d) && (earliest === null || d < earliest)) earliest = d;
+    });
+    return earliest;
+  }
+
+  function getLatestDate() {
+    if (!appData.transactions || appData.transactions.length === 0) return now;
+    let latest = now;
+    appData.transactions.forEach(t => {
+      if (!t.date) return;
+      const d = new Date(t.date);
+      if (!isNaN(d) && d > latest) latest = d;
+    });
+    return latest;
+  }
+
+  function monthTotal(type, month, year) {
+    return appData.transactions
+      .filter(t => {
+        if (!t.date || t.type !== type) return false;
+        const d = new Date(t.date);
+        return !isNaN(d) && d.getMonth() === month && d.getFullYear() === year;
+      })
+      .reduce((s, t) => s + Number(t.amount || 0), 0);
+  }
 
   if (mode === 'year') {
-    // 4 tahun terakhir
-    const currentYear = now.getFullYear();
-    for (let y = currentYear - 3; y <= currentYear; y++) {
+    // Tampilkan dari tahun transaksi pertama sampai tahun terbaru (maks 5 tahun)
+    const earliest = getEarliestDate();
+    const latest   = getLatestDate();
+    const startYear = earliest ? earliest.getFullYear() : nowYear;
+    const endYear   = latest.getFullYear();
+    const fromYear  = Math.max(startYear, endYear - 4);
+
+    for (let y = fromYear; y <= endYear; y++) {
       labels.push(String(y));
       let inc = 0, exp = 0;
       for (let m = 0; m < 12; m++) {
-        inc += getMonthlyTotal('income', m, y);
-        exp += getMonthlyTotal('expense', m, y);
+        inc += monthTotal('income',  m, y);
+        exp += monthTotal('expense', m, y);
       }
       incomeData.push(inc);
       expenseData.push(exp);
     }
 
   } else if (mode === 'month') {
-    // Cari bulan paling awal yang ada transaksi
-    if (appData.transactions.length === 0) {
-      // Kalau tidak ada data, tampilkan 3 bulan terakhir
+    const earliest = getEarliestDate();
+    const latest   = getLatestDate();
+
+    if (!earliest) {
       for (let i = 2; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const mn = d.getMonth();
-        const yr = String(d.getFullYear()).slice(2);
-        labels.push(monthNames[mn] + '-' + yr);
+        const d  = new Date(nowYear, nowMonth - i, 1);
+        labels.push(monthNames[d.getMonth()] + '-' + String(d.getFullYear()).slice(2));
         incomeData.push(0);
         expenseData.push(0);
       }
     } else {
-      // Cari tanggal transaksi paling awal
-      const allDates = appData.transactions.map(t => new Date(t.date));
-      const earliest = new Date(Math.min(...allDates));
-      const earliestMonth = new Date(earliest.getFullYear(), earliest.getMonth(), 1);
-      const currentMonth  = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startM = earliest.getMonth();
+      const startY = earliest.getFullYear();
+      const endM   = latest.getMonth();
+      const endY   = latest.getFullYear();
 
-      // Hitung selisih bulan
-      let diffMonth = (currentMonth.getFullYear() - earliestMonth.getFullYear()) * 12
-                    + (currentMonth.getMonth() - earliestMonth.getMonth());
-
-      // Batasi maksimal 12 bulan
-      if (diffMonth > 11) diffMonth = 11;
+      let diffMonth = (endY - startY) * 12 + (endM - startM);
+      if (diffMonth > 23) diffMonth = 23; // maks 24 bulan
 
       for (let i = diffMonth; i >= 0; i--) {
-        const d  = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const d  = new Date(endY, endM - i, 1);
         const mn = d.getMonth();
-        const yr = String(d.getFullYear()).slice(2);
-        labels.push(monthNames[mn] + '-' + yr);
-        incomeData.push(getMonthlyTotal('income',  mn, d.getFullYear()));
-        expenseData.push(getMonthlyTotal('expense', mn, d.getFullYear()));
+        const yr = d.getFullYear();
+        labels.push(monthNames[mn] + '-' + String(yr).slice(2));
+        incomeData.push(monthTotal('income',  mn, yr));
+        expenseData.push(monthTotal('expense', mn, yr));
       }
     }
 
   } else if (mode === 'week') {
-    // 8 minggu terakhir, label: "W17/Mei"
+    // Dari minggu pertama ada transaksi sampai minggu ini
+    const earliest = getEarliestDate();
+    const latest   = getLatestDate();
+
     function getWeekNumber(date) {
-      const start = new Date(date.getFullYear(), 0, 1);
-      const diff = date - start;
+      const start   = new Date(date.getFullYear(), 0, 1);
       const oneWeek = 7 * 24 * 60 * 60 * 1000;
-      return Math.ceil((diff / oneWeek) + 1);
+      return Math.ceil(((date - start) / oneWeek) + 1);
     }
 
-    for (let w = 7; w >= 0; w--) {
-      const monday = new Date(now);
-      const day = now.getDay() === 0 ? 6 : now.getDay() - 1;
-      monday.setDate(now.getDate() - day - (w * 7));
-      monday.setHours(0, 0, 0, 0);
+    function getMondayOfDate(date) {
+      const d   = new Date(date);
+      const day = d.getDay() === 0 ? 6 : d.getDay() - 1;
+      d.setDate(d.getDate() - day);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
 
+    const startMonday = earliest ? getMondayOfDate(earliest) : getMondayOfDate(new Date(nowYear, nowMonth - 1, 1));
+    const endMonday   = getMondayOfDate(latest);
+
+    // Hitung jumlah minggu
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    let totalWeeks  = Math.round((endMonday - startMonday) / msPerWeek);
+    if (totalWeeks > 15) totalWeeks = 15; // maks 16 minggu
+
+    for (let w = totalWeeks; w >= 0; w--) {
+      const monday = new Date(endMonday);
+      monday.setDate(endMonday.getDate() - (w * 7));
       const sunday = new Date(monday);
       sunday.setDate(monday.getDate() + 6);
       sunday.setHours(23, 59, 59, 999);
 
-      const weekNum = getWeekNumber(monday);
-      labels.push('W' + weekNum + '/' + monthNames[monday.getMonth()]);
+      const wn  = getWeekNumber(monday);
+      labels.push('W' + wn + '/' + monthNames[monday.getMonth()]);
 
       let inc = 0, exp = 0;
       appData.transactions.forEach(t => {
+        if (!t.date) return;
         const d = new Date(t.date);
-        if (d >= monday && d <= sunday) {
-          if (t.type === 'income') inc += Number(t.amount);
-          else exp += Number(t.amount);
+        if (!isNaN(d) && d >= monday && d <= sunday) {
+          if (t.type === 'income') inc += Number(t.amount || 0);
+          else exp += Number(t.amount || 0);
         }
       });
       incomeData.push(inc);
