@@ -322,7 +322,81 @@ function showDebtDetail(id) {
   if (debt.startDate) info += `📅 Mulai: ${new Date(debt.startDate).toLocaleDateString('id-ID')}<br>`;
   if (debt.duration)  info += `⏱️ Jangka: ${debt.duration} bulan<br>`;
   if (debt.interest)  info += `💹 Bunga: ${debt.interest}% (${debt.interestType||'flat'})<br>`;
-  if (debt.note)      info += `📝 ${debt.note}`;
+  if (debt.note)      info += `📝 ${debt.note}<br>`;
+
+  // ── Kalkulasi bunga ──
+  const pokok   = Number(debt.amount) || 0;
+  const bunga   = parseFloat((debt.interest||'0').replace(',','.')) || 0;
+  const jangka  = parseInt(debt.duration) || 0;
+  const tipe    = (debt.interestType || 'flat').toLowerCase();
+
+  if (pokok > 0 && bunga > 0 && jangka > 0) {
+    info += '<br>';
+    if (tipe === 'flat') {
+      // Bunga Flat: bunga dihitung dari pokok awal, tetap setiap bulan
+      const bungaPerBulan  = (pokok * (bunga / 100)) / 12;
+      const cicilanPerBulan = (pokok / jangka) + bungaPerBulan;
+      const totalBunga     = bungaPerBulan * jangka;
+      const totalBayar     = pokok + totalBunga;
+
+      info += `<div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;margin-top:4px;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px;">📊 Simulasi Bunga Flat</div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+          <span style="opacity:.6;">Pokok Pinjaman</span><span>${fmt(pokok)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+          <span style="opacity:.6;">Bunga/Bulan</span><span>${fmt(Math.round(bungaPerBulan))}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+          <span style="opacity:.6;">Cicilan/Bulan</span><span style="color:#ffa502;font-weight:700;">${fmt(Math.round(cicilanPerBulan))}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+          <span style="opacity:.6;">Total Bunga</span><span style="color:#ff4757;">${fmt(Math.round(totalBunga))}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;margin-top:2px;">
+          <span style="font-weight:700;">Total Bayar</span>
+          <span style="font-weight:800;font-size:15px;color:#00e87a;">${fmt(Math.round(totalBayar))}</span>
+        </div>
+      </div>`;
+
+    } else {
+      // Bunga Menurun (Anuitas): bunga dihitung dari sisa pokok
+      const r = (bunga / 100) / 12; // bunga per bulan
+      let cicilanPerBulan = 0;
+      if (r === 0) {
+        cicilanPerBulan = pokok / jangka;
+      } else {
+        cicilanPerBulan = pokok * (r * Math.pow(1+r, jangka)) / (Math.pow(1+r, jangka) - 1);
+      }
+
+      // Hitung total bunga dari tabel amortisasi
+      let sisaPokok = pokok;
+      let totalBunga = 0;
+      for (let i = 0; i < jangka; i++) {
+        const bungaBulanIni = sisaPokok * r;
+        totalBunga += bungaBulanIni;
+        sisaPokok -= (cicilanPerBulan - bungaBulanIni);
+      }
+      const totalBayar = pokok + totalBunga;
+
+      info += `<div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;margin-top:4px;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px;">📊 Simulasi Bunga Menurun (Anuitas)</div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+          <span style="opacity:.6;">Pokok Pinjaman</span><span>${fmt(pokok)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+          <span style="opacity:.6;">Cicilan/Bulan</span><span style="color:#ffa502;font-weight:700;">${fmt(Math.round(cicilanPerBulan))}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+          <span style="opacity:.6;">Total Bunga</span><span style="color:#ff4757;">${fmt(Math.round(totalBunga))}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;margin-top:2px;">
+          <span style="font-weight:700;">Total Bayar</span>
+          <span style="font-weight:800;font-size:15px;color:#00e87a;">${fmt(Math.round(totalBayar))}</span>
+        </div>
+      </div>`;
+    }
+  }
 
   document.getElementById('detailDebtInfo').innerHTML = info;
   document.getElementById('detailDebtStatus').innerHTML = `Status: <strong>${statusMap[debt.status]||'-'}</strong>`;
