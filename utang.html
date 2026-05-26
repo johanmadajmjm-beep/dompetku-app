@@ -59,6 +59,7 @@
 
     <input type="hidden" id="debtId">
     <input type="hidden" id="debtTypeHidden">
+    <input type="hidden" id="debtInterestPeriod" value="bulan">
 
     <!-- Tipe -->
     <div class="input-group">
@@ -92,6 +93,10 @@
         <div class="input-suffix">
           <input type="text" id="debtInterest" class="premium-input" placeholder="1,5" inputmode="decimal">
           <span>%</span>
+        </div>
+        <div class="type-selector" style="margin-top:6px;">
+          <button class="type-btn active" id="btnPerBulan" onclick="selectBungaPeriod('bulan')" style="font-size:11px;padding:7px 6px;">Per Bulan</button>
+          <button class="type-btn" id="btnPerTahun" onclick="selectBungaPeriod('tahun')" style="font-size:11px;padding:7px 6px;">Per Tahun</button>
         </div>
       </div>
     </div>
@@ -244,7 +249,7 @@ function renderDebtList(list, container, type) {
     const amountPrefix = type==='owed' ? '-' : '+';
     const fmt = v => 'Rp ' + Number(v).toLocaleString('id-ID');
 
-    const interestInfo = d.interest ? ` · Bunga ${d.interest}% (${d.interestType||'flat'})` : '';
+    const interestInfo = d.interest ? ` · Bunga ${d.interest}%/${d.interestPeriod||'bln'} (${d.interestType||'flat'})` : '';
     const durationInfo = d.duration ? ` · ${d.duration} bulan` : '';
 
     // Hitung total bunga & total bayar
@@ -348,7 +353,14 @@ function showDebtModal(prefillType) {
   document.getElementById('debtModalTitle').innerText = 'Tambah Utang';
   selectDebtType(currentDebtType);
   selectInterestType('flat');
+  selectBungaPeriod('bulan');
   document.getElementById('debtModal').style.display = 'flex';
+}
+
+function selectBungaPeriod(period) {
+  document.getElementById('debtInterestPeriod').value = period;
+  document.getElementById('btnPerBulan').classList.toggle('active', period === 'bulan');
+  document.getElementById('btnPerTahun').classList.toggle('active', period === 'tahun');
 }
 
 function selectDebtType(type) {
@@ -375,11 +387,12 @@ function saveDebt() {
   const note     = document.getElementById('debtNote').value.trim();
   const status   = document.getElementById('debtStatus').value;
   const debtType = document.getElementById('debtTypeHidden').value || currentDebtType;
+  const interestPeriod = document.getElementById('debtInterestPeriod').value || 'bulan';
 
   if (!name || amount <= 0) { alert('Isi nama dan nominal.'); return; }
 
   const debts = getDebts();
-  const data  = { name, amount, interest, interestType: currentInterestType, duration, startDate, note, status, debtType };
+  const data  = { name, amount, interest, interestType: currentInterestType, interestPeriod, duration, startDate, note, status, debtType };
 
   if (id) {
     const idx = debts.findIndex(d => String(d.id) === String(id));
@@ -498,7 +511,7 @@ function showDebtDetail(id) {
   let info = '';
   if (debt.startDate) info += `📅 Mulai: ${new Date(debt.startDate).toLocaleDateString('id-ID')}<br>`;
   if (debt.duration)  info += `⏱️ Jangka: ${debt.duration} bulan<br>`;
-  if (debt.interest)  info += `💹 Bunga: ${debt.interest}% (${debt.interestType||'flat'})<br>`;
+  if (debt.interest)  info += `💹 Bunga: ${debt.interest}%/${(debt.interestPeriod||'bulan')} (${debt.interestType||'flat'})<br>`;
   if (debt.note)      info += `📝 ${debt.note}<br>`;
 
   // ── Ringkasan Pembayaran ──
@@ -536,10 +549,12 @@ function showDebtDetail(id) {
     info += '<br>';
     if (tipe === 'flat') {
       // Bunga Flat: bunga dihitung dari pokok awal, tetap setiap bulan
-      const bungaPerBulan   = pokok * (bunga / 100);
+      const period          = (debt.interestPeriod||'bulan').toLowerCase();
+      const bungaPerBulan   = period === 'tahun' ? pokok * (bunga/100/12) : pokok * (bunga/100);
       const cicilanPerBulan = (pokok / jangka) + bungaPerBulan;
       const totalBunga      = bungaPerBulan * jangka;
       const totalBayar      = pokok + totalBunga;
+      const periodeLabel    = period === 'tahun' ? bunga + '%/thn ('+( bunga/12).toFixed(3)+'%/bln)' : bunga + '%/bln';
       const fmtBunga        = fmt(Math.round(bungaPerBulan));
       const fmtCicilan      = fmt(Math.round(cicilanPerBulan));
       const fmtTotalBunga   = fmt(Math.round(totalBunga));
@@ -567,7 +582,8 @@ function showDebtDetail(id) {
 
     } else {
       // Bunga Menurun (Anuitas): bunga dihitung dari sisa pokok
-      const r = bunga / 100; // bunga % per bulan
+      const periodM = (debt.interestPeriod||'bulan').toLowerCase();
+      const r = periodM === 'tahun' ? (bunga/100/12) : (bunga/100); // bunga per bulan
       let cicilanPerBulan = 0;
       if (r === 0) {
         cicilanPerBulan = pokok / jangka;
@@ -632,6 +648,7 @@ function editDebtFromDetail() {
   document.getElementById('debtModalTitle').innerText = 'Edit Utang';
   selectDebtType(debt.debtType);
   selectInterestType(debt.interestType || 'flat');
+  selectBungaPeriod(debt.interestPeriod || 'bulan');
   document.getElementById('debtModal').style.display = 'flex';
 }
 
