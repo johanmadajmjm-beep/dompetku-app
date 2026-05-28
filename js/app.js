@@ -55,8 +55,8 @@ function updateDashboardStats() {
     .filter(d => d.debtType === 'lent' && d.status !== 'paid')
     .reduce((s, d) => s + Number(d.amount || 0), 0);
 
-  // Total Aset = Total Saldo + Total Tabungan
-  const totalAset = totalBalance + totalSavings;
+  // Total Aset = Total Saldo + Total Tabungan + Total Piutang
+  const totalAset = totalBalance + totalSavings + totalPiutang;
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
   set('totalBalance',  formatCurrency(totalBalance));
